@@ -11,7 +11,7 @@ import io
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Nick Hull Emerson Engineering | Portal", page_icon="🏗️", layout="centered")
 
-# --- FUNÇÃO PARA CONEXÃO COM GOOGLE DRIVE ---
+# --- FUNÇÃO PARA CONEXÃO COM GOOGLE DRIVE (AUTOMATIZADO) ---
 def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
     try:
         # Puxa as credenciais dos Secrets do Streamlit
@@ -19,24 +19,25 @@ def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
         creds = service_account.Credentials.from_service_account_info(creds_info)
         service = build('drive', 'v3', credentials=creds)
 
-        # ID da pasta "Mãe"
-        ID_PASTA_MAE = "1COAkvKbohr0yxV6YHeyqJx6BM1o-sKFw"
-        
-        # 1. Cria a pasta do cliente
+        # ID da sua pasta que você me enviou
+        ID_PASTA_MAE = "1COAkvKbohr0yxV6YHeyqJx6BM1o-sKFw" 
+
+        # 1. Cria a pasta do cliente dentro da pasta Mãe
         file_metadata = {
             'name': f"{protocolo} - {nome_cliente}",
             'mimeType': 'application/vnd.google-apps.folder',
             'parents': [ID_PASTA_MAE]
         }
-        folder = service.files().create(body=file_metadata, fields='id').execute()
+        folder = service.files().create(body=file_metadata, fields='id', supportsAllDrives=True).execute()
         folder_id = folder.get('id')
 
-        # 2. Faz o upload dos arquivos
-        for uploaded_file in arquivos_carregados:
-            file_metadata = {'name': uploaded_file.name, 'parents': [folder_id]}
-            media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), 
-                                      mimetype=uploaded_file.type, resumable=True)
-            service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+        # 2. Faz o upload dos arquivos para a pasta recém-criada
+        if arquivos_carregados:
+            for uploaded_file in arquivos_carregados:
+                file_metadata = {'name': uploaded_file.name, 'parents': [folder_id]}
+                media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), 
+                                          mimetype=uploaded_file.type, resumable=True)
+                service.files().create(body=file_metadata, media_body=media, fields='id', supportsAllDrives=True).execute()
         
         return folder_id
     except Exception as e:
@@ -133,9 +134,6 @@ if finalidade != "Selecione uma opção...":
         if k in finalidade: 
             st.info(f"**Importância:** {v}")
 
-    if "Usucapião" in finalidade:
-        anos = st.number_input("Há quantos anos você possui a posse do imóvel? *", min_value=0, step=1)
-
     st.write("### 📍 Localização e Triagem Fiscal")
     col1, col2 = st.columns([3, 1])
     with col1: ender = st.text_input("Logradouro (Rua/Av) *")
@@ -164,92 +162,41 @@ if finalidade != "Selecione uma opção...":
     servicos_documentais = ["Usucapião", "Retificação", "CND", "Avaliação"]
     
     if any(s in finalidade for s in servicos_documentais):
-        req_text = ""
-        if "Usucapião" in finalidade:
-            req_text = "• Matrícula ou Contrato de compra e venda<br>• Documento de identificação (RG, CNH ou CIN)<br>• Carnê do IPTU<br>• Projeto existente (se houver)"
-        elif "Retificação" in finalidade:
-            req_text = "• Matrícula ou Transcrição<br>• Documento de identificação (RG, CNH ou CIN)<br>• Carnê do IPTU<br>• Levantamento topográfico anterior (se houver)"
-        elif "CND" in finalidade:
-            req_text = "• Alvará de Construção / Projeto Aprovado<br>• Documento de identificação (Responsável)<br>• Capa do IPTU<br>• Notas Fiscais (se houver)"
-        elif "Avaliação" in finalidade:
-            req_text = "• Matrícula atualizada<br>• Capa do IPTU (ano vigente)<br>• Documento de identificação<br>• Projeto arquitetônico (se houver)"
-        
+        req_text = "• Matrícula ou Contrato<br>• Documento de Identidade<br>• Carnê IPTU"
         st.markdown(f'<div class="doc-list"><b>📄 Documentação necessária:</b><br>{req_text}</div><br>', unsafe_allow_html=True)
     else:
-        st.markdown('<div class="doc-list"><b>📸 Guia de Fotos:</b><br>• IPTU: Capa legível.<br>• Contexto e Detalhes da área.</div><br>', unsafe_allow_html=True)
+        st.markdown('<div class="doc-list"><b>📸 Guia de Fotos:</b><br>• Capa do IPTU<br>• Fotos da área/patologia.</div><br>', unsafe_allow_html=True)
 
-    files = st.file_uploader("Selecione as Fotos ou PDFs", accept_multiple_files=True, type=['pdf','png','jpg','jpeg'])
+    files = st.file_uploader("Selecione as Fotos ou PDFs para conferência", accept_multiple_files=True, type=['pdf','png','jpg','jpeg'])
 
     st.write("---")
     st.write("### 🔒 Privacidade e Autorização")
     lgpd_check = st.checkbox("Concordo com o tratamento dos meus dados pessoais (LGPD).")
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
-        campos_obrigatorios = {
-            "Nome": nome_resp.strip(), "Logradouro": ender.strip(), "Bairro": bairro.strip(),
-            "IPTU": iptu.strip(), "Área": area > 0, "Documento": (c_mat or c_cont), "LGPD": lgpd_check
-        }
-        
-        erros = [f"O campo '{k}' é obrigatório." for k, v in campos_obrigatorios.items() if not v]
-        
-        if erros:
-            for e in erros: st.error(e)
+        # Validação de campos
+        if not nome_resp or not ender or not iptu or not lgpd_check or (not c_mat and not c_cont):
+            st.error("Por favor, preencha todos os campos obrigatórios (*) e aceite a LGPD.")
         else:
             protocolo_id = f"NH-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
             
-            # --- INTEGRANDO O UPLOAD PARA O DRIVE ---
-def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
-    try:
-        creds_info = st.secrets["gcp_service_account"]
-        creds = service_account.Credentials.from_service_account_info(creds_info)
-        service = build('drive', 'v3', credentials=creds)
-
-        ID_PASTA_MAE = "1COAkvKbohr0yxV6YHeyqJx6BM1o-sKFw" 
-
-        # 1. Cria a pasta do cliente
-        file_metadata = {
-            'name': f"{protocolo} - {nome_cliente}",
-            'mimeType': 'application/vnd.google-apps.folder',
-            'parents': [ID_PASTA_MAE]
-        }
-        folder = service.files().create(body=file_metadata, fields='id').execute()
-        folder_id = folder.get('id')
-
-        # 2. Faz o upload dos arquivos
-        for uploaded_file in arquivos_carregados:
-            file_metadata = {'name': uploaded_file.name, 'parents': [folder_id]}
-            media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), 
-                                      mimetype=uploaded_file.type, resumable=True)
+            # Executa o upload silencioso para o Drive
+            with st.spinner('📦 Processando diagnóstico e salvando arquivos...'):
+                drive_id = upload_to_drive(protocolo_id, nome_resp, files)
             
-            # Comando corrigido para usar a sua cota de espaço
-            service.files().create(
-                body=file_metadata, 
-                media_body=media, 
-                fields='id',
-                supportsAllDrives=True 
-            ).execute()
-        
-        return folder_id
-    except Exception as e:
-        st.error(f"Erro na integração com Drive: {e}")
-        return None
----------------------------------------
-🆔 *Protocolo:* {protocolo_id}
-👤 *Cliente:* {nome_resp}
-🏗️ *Serviço:* {finalidade}
-📍 *Local:* {ender}, {num}
-📂 *Drive:* {link_drive}
-"""
-            msg_encoded = urllib.parse.quote(msg_whatsapp)
-            link_wa = f"https://wa.me/5511998511552?text={msg_encoded}"
-            
-            st.markdown(f'''
-                <a href="{link_wa}" target="_blank" style="text-decoration:none;">
-                    <button style="width:100%; background-color:#25D366; color:white; border:none; padding:15px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:18px;">
-                        📲 ABRIR WHATSAPP DO ENGENHEIRO
-                    </button>
-                </a>
-            ''', unsafe_allow_html=True)
+            if drive_id:
+                st.balloons()
+                st.markdown(f"""
+                <div class="protocol-box">
+                    <h3 style="color:#25D366; margin:0;">✅ Diagnóstico Enviado com Sucesso!</h3><br>
+                    <b>Seu Protocolo: {protocolo_id}</b><br><br>
+                    Os dados e arquivos foram enviados diretamente para a central da <b>Nick Hull Emerson Engineering</b>.<br>
+                    🕒 <b>Prazo para análise:</b> 24h a 48h úteis.<br><br>
+                    <i>Não é necessário realizar mais nenhuma ação. Entraremos em contato em breve.</i>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.error("Erro ao salvar arquivos no Drive. Verifique as permissões da pasta.")
 
 st.markdown("---")
 st.caption("© 2026 Nick Hull Emerson Engineering | Low-Friction Systems")
