@@ -19,7 +19,7 @@ def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
         creds = service_account.Credentials.from_service_account_info(creds_info)
         service = build('drive', 'v3', credentials=creds)
 
-        # ID da sua pasta que você me enviou
+        # ID da sua pasta mãe fornecido
         ID_PASTA_MAE = "1COAkvKbohr0yxV6YHeyqJx6BM1o-sKFw" 
 
         # 1. Cria a pasta do cliente dentro da pasta Mãe
@@ -28,7 +28,11 @@ def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
             'mimeType': 'application/vnd.google-apps.folder',
             'parents': [ID_PASTA_MAE]
         }
-        folder = service.files().create(body=file_metadata, fields='id', supportsAllDrives=True).execute()
+        folder = service.files().create(
+            body=file_metadata, 
+            fields='id', 
+            supportsAllDrives=True
+        ).execute()
         folder_id = folder.get('id')
 
         # 2. Faz o upload dos arquivos para a pasta recém-criada
@@ -37,7 +41,12 @@ def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
                 file_metadata = {'name': uploaded_file.name, 'parents': [folder_id]}
                 media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), 
                                           mimetype=uploaded_file.type, resumable=True)
-                service.files().create(body=file_metadata, media_body=media, fields='id', supportsAllDrives=True).execute()
+                service.files().create(
+                    body=file_metadata, 
+                    media_body=media, 
+                    fields='id', 
+                    supportsAllDrives=True
+                ).execute()
         
         return folder_id
     except Exception as e:
@@ -174,49 +183,27 @@ if finalidade != "Selecione uma opção...":
     lgpd_check = st.checkbox("Concordo com o tratamento dos meus dados pessoais (LGPD).")
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
-        # Validação de campos
-        if not nome_resp or not ender or not iptu or not lgpd_check or (not c_mat and not c_cont):
-            st.error("Por favor, preencha todos os campos obrigatórios (*) e aceite a LGPD.")
+        if not nome_resp or not ender or not iptu or not lgpd_check:
+            st.error("Por favor, preencha os campos obrigatórios (*) e aceite a LGPD.")
         else:
             protocolo_id = f"NH-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
             
-            # Executa o upload silencioso para o Drive
-            def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
-    try:
-        creds_info = st.secrets["gcp_service_account"]
-        creds = service_account.Credentials.from_service_account_info(creds_info)
-        service = build('drive', 'v3', credentials=creds)
-
-        # ID da sua pasta mãe
-        ID_PASTA_MAE = "1COAkvKbohr0yxV6YHeyqJx6BM1o-sKFw" 
-
-        # 1. Cria a pasta do cliente (com suporte a compartilhamento)
-        file_metadata = {
-            'name': f"{protocolo} - {nome_cliente}",
-            'mimeType': 'application/vnd.google-apps.folder',
-            'parents': [ID_PASTA_MAE]
-        }
-        folder = service.files().create(
-            body=file_metadata, 
-            fields='id', 
-            supportsAllDrives=True  # Permite usar o espaço da pasta pai
-        ).execute()
-        folder_id = folder.get('id')
-
-        # 2. Faz o upload dos arquivos
-        for uploaded_file in arquivos_carregados:
-            file_metadata = {'name': uploaded_file.name, 'parents': [folder_id]}
-            media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), 
-                                      mimetype=uploaded_file.type, resumable=True)
+            with st.spinner('📦 Processando diagnóstico e salvando arquivos...'):
+                drive_id = upload_to_drive(protocolo_id, nome_resp, files)
             
-            service.files().create(
-                body=file_metadata, 
-                media_body=media, 
-                fields='id',
-                supportsAllDrives=True # Garante que o arquivo use a cota do dono da pasta (você)
-            ).execute()
-        
-        return folder_id
-    except Exception as e:
-        st.error(f"Erro na integração com Drive: {e}")
-        return None
+            if drive_id:
+                st.balloons()
+                st.markdown(f"""
+                <div class="protocol-box">
+                    <h3 style="color:#25D366; margin:0;">✅ Diagnóstico Enviado com Sucesso!</h3><br>
+                    <b>Seu Protocolo: {protocolo_id}</b><br><br>
+                    Os dados e arquivos foram enviados para a central da <b>Nick Hull Emerson Engineering</b>.<br>
+                    🕒 <b>Prazo para análise:</b> 24h a 48h úteis.<br><br>
+                    <i>Entraremos em contato através do número informado em seu cadastro.</i>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.error("Erro técnico no upload. Verifique as permissões da pasta no Drive.")
+
+st.markdown("---")
+st.caption("© 2026 Nick Hull Emerson Engineering | Low-Friction Systems")
