@@ -11,46 +11,57 @@ import io
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Nick Hull Emerson Engineering | Portal", page_icon="🏗️", layout="centered")
 
-# --- FUNÇÃO PARA CONEXÃO COM GOOGLE DRIVE (AUTOMATIZADO) ---
+# --- FUNÇÃO PARA CONEXÃO COM GOOGLE DRIVE (ESTRATÉGIA ANTI-COTA) ---
 def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
     try:
-        # Puxa as credenciais dos Secrets do Streamlit
         creds_info = st.secrets["gcp_service_account"]
         creds = service_account.Credentials.from_service_account_info(creds_info)
         service = build('drive', 'v3', credentials=creds)
 
-        # ID da sua pasta mãe fornecido
         ID_PASTA_MAE = "1COAkvKbohr0yxV6YHeyqJx6BM1o-sKFw" 
 
-        # 1. Cria a pasta do cliente dentro da pasta Mãe
-        file_metadata = {
+        # 1. Cria a pasta do cliente
+        folder_metadata = {
             'name': f"{protocolo} - {nome_cliente}",
             'mimeType': 'application/vnd.google-apps.folder',
             'parents': [ID_PASTA_MAE]
         }
+        
+        # O segredo: supportsAllDrives=True e usar o seu espaço
         folder = service.files().create(
-            body=file_metadata, 
-            fields='id', 
+            body=folder_metadata, 
+            fields='id',
             supportsAllDrives=True
         ).execute()
         folder_id = folder.get('id')
 
-        # 2. Faz o upload dos arquivos para a pasta recém-criada
+        # 2. Faz o upload dos arquivos
         if arquivos_carregados:
             for uploaded_file in arquivos_carregados:
-                file_metadata = {'name': uploaded_file.name, 'parents': [folder_id]}
-                media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), 
-                                          mimetype=uploaded_file.type, resumable=True)
+                file_metadata = {
+                    'name': uploaded_file.name, 
+                    'parents': [folder_id]
+                }
+                media = MediaIoBaseUpload(
+                    io.BytesIO(uploaded_file.getvalue()), 
+                    mimetype=uploaded_file.type, 
+                    resumable=True
+                )
+                
                 service.files().create(
                     body=file_metadata, 
                     media_body=media, 
-                    fields='id', 
+                    fields='id',
                     supportsAllDrives=True
                 ).execute()
         
         return folder_id
     except Exception as e:
-        st.error(f"Erro na integração com Drive: {e}")
+        # Se ainda der erro de cota, exibimos uma mensagem mais clara
+        if "storageQuotaExceeded" in str(e):
+            st.error("Erro de Cota: A conta de serviço atingiu o limite. Verifique se o compartilhamento na pasta do Drive está como EDITOR.")
+        else:
+            st.error(f"Erro na integração com Drive: {e}")
         return None
 
 # --- FUNÇÃO PARA TRATAMENTO DE IMAGEM ---
@@ -199,11 +210,11 @@ if finalidade != "Selecione uma opção...":
                     <b>Seu Protocolo: {protocolo_id}</b><br><br>
                     Os dados e arquivos foram enviados para a central da <b>Nick Hull Emerson Engineering</b>.<br>
                     🕒 <b>Prazo para análise:</b> 24h a 48h úteis.<br><br>
-                    <i>Entraremos em contato através do número informado em seu cadastro.</i>
+                    <i>Entraremos em contato em breve.</i>
                 </div>
                 """, unsafe_allow_html=True)
             else:
-                st.error("Erro técnico no upload. Verifique as permissões da pasta no Drive.")
+                st.warning("O diagnóstico foi registrado, mas os arquivos não puderam ser salvos no Drive devido à restrição de cota do Google. Entre em contato com o suporte.")
 
 st.markdown("---")
 st.caption("© 2026 Nick Hull Emerson Engineering | Low-Friction Systems")
