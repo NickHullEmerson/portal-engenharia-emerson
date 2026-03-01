@@ -20,8 +20,8 @@ def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
         service = build('drive', 'v3', credentials=creds)
 
         # ID da pasta "Mãe"
-        ID_PASTA_MAE = "COLE_AQUI_O_ID_DA_SUA_PASTA" 
-
+        ID_PASTA_MAE = "1COAkvKbohr0yxV6YHeyqJx6BM1o-sKFw"
+        
         # 1. Cria a pasta do cliente
         file_metadata = {
             'name': f"{protocolo} - {nome_cliente}",
