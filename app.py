@@ -198,21 +198,44 @@ if finalidade != "Selecione uma opção...":
             protocolo_id = f"NH-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
             
             # --- INTEGRANDO O UPLOAD PARA O DRIVE ---
-            with st.spinner('📦 Enviando arquivos para o Google Drive...'):
-                drive_id = upload_to_drive(protocolo_id, nome_resp, files)
-            
-            # --- EXIBIÇÃO DE SUCESSO ---
-            st.markdown(f"""
-            <div class="protocol-box">
-                <h3 style="color:#25D366; margin:0;">✅ Protocolo Gerado: {protocolo_id}</h3><br>
-                Arquivos salvos com segurança no Drive.<br>
-                🕒 Prazo de resposta: 24h a 48h úteis.
-            </div>
-            """, unsafe_allow_html=True)
+            def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
+    try:
+        creds_info = st.secrets["gcp_service_account"]
+        creds = service_account.Credentials.from_service_account_info(creds_info)
+        service = build('drive', 'v3', credentials=creds)
 
-            link_drive = f"https://drive.google.com/drive/folders/{drive_id}" if drive_id else "Erro ao gerar link"
+        ID_PASTA_MAE = "1COAkvKbohr0yxV6YHeyqJx6BM1o-sKFw" 
+
+        # 1. Cria a pasta do cliente
+        file_metadata = {
+            'name': f"{protocolo} - {nome_cliente}",
+            'mimeType': 'application/vnd.google-apps.folder',
+            'parents': [ID_PASTA_MAE]
+        }
+        folder = service.files().create(body=file_metadata, fields='id').execute()
+        folder_id = folder.get('id')
+
+        # 2. Faz o upload dos arquivos
+        for uploaded_file in arquivos_carregados:
+            file_metadata = {
+                'name': uploaded_file.name, 
+                'parents': [folder_id]
+            }
+            media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), 
+                                      mimetype=uploaded_file.type, resumable=True)
             
-            msg_whatsapp = f"""*NOVO DIAGNÓSTICO - NICK HULL EMERSON*
+            # O segredo está aqui: pedimos para não usar a cota da conta de serviço
+            service.files().create(
+                body=file_metadata, 
+                media_body=media, 
+                fields='id',
+                supportsAllDrives=True # Importante para evitar erro de cota em pastas compartilhadas
+            ).execute()
+        
+        return folder_id
+    except Exception as e:
+        st.error(f"Erro na integração com Drive: {e}")
+        return None
 ---------------------------------------
 🆔 *Protocolo:* {protocolo_id}
 👤 *Cliente:* {nome_resp}
