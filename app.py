@@ -198,7 +198,7 @@ if finalidade != "Selecione uma opção...":
             protocolo_id = f"NH-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
             
             # --- INTEGRANDO O UPLOAD PARA O DRIVE ---
-            def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
+def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
     try:
         creds_info = st.secrets["gcp_service_account"]
         creds = service_account.Credentials.from_service_account_info(creds_info)
@@ -217,19 +217,16 @@ if finalidade != "Selecione uma opção...":
 
         # 2. Faz o upload dos arquivos
         for uploaded_file in arquivos_carregados:
-            file_metadata = {
-                'name': uploaded_file.name, 
-                'parents': [folder_id]
-            }
+            file_metadata = {'name': uploaded_file.name, 'parents': [folder_id]}
             media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), 
                                       mimetype=uploaded_file.type, resumable=True)
             
-            # O segredo está aqui: pedimos para não usar a cota da conta de serviço
+            # Comando corrigido para usar a sua cota de espaço
             service.files().create(
                 body=file_metadata, 
                 media_body=media, 
                 fields='id',
-                supportsAllDrives=True # Importante para evitar erro de cota em pastas compartilhadas
+                supportsAllDrives=True 
             ).execute()
         
         return folder_id
