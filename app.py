@@ -4,7 +4,7 @@ import urllib.parse
 from datetime import datetime
 import random
 import requests  # Para API de CEP e CNPJ
-import re        # Para validação de CPF/CNPJ
+import re        # Para validação de CPF/CNPJ/IPTU
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Nick Hull Emerson Engineering", page_icon="🏗️", layout="centered")
@@ -17,7 +17,6 @@ if 'razao_social' not in st.session_state: st.session_state.razao_social = ''
 
 # --- FUNÇÃO DE BUSCA DE CEP (VIACEP) ---
 def buscar_cep():
-    # Verifica se a chave existe antes de tentar acessar
     if 'cep_input' in st.session_state:
         cep_digitado = st.session_state.cep_input.replace("-", "").replace(".", "").strip()
         if len(cep_digitado) == 8:
@@ -49,10 +48,15 @@ def buscar_cnpj():
             except:
                 pass
 
-# --- VALIDAÇÃO SIMPLES DE CPF ---
+# --- VALIDAÇÕES DE FORMATO ---
 def validar_cpf_formato(cpf):
     cpf = re.sub(r'[^0-9]', '', cpf)
     return len(cpf) == 11
+
+def validar_iptu_formato(iptu_texto):
+    # Permite apenas Números, Pontos e Traços. Rejeita letras ou espaços vazios.
+    if not iptu_texto: return False
+    return bool(re.match(r'^[0-9.-]+$', iptu_texto))
 
 # --- FUNÇÃO PARA TRATAMENTO DE IMAGEM ---
 def get_base64_logo(file_path):
@@ -70,13 +74,13 @@ st.markdown("""
     <style>
     .main { background-color: #0e1117; }
     
-    /* COMPACTAÇÃO DA PÁGINA (Remove espaços brancos do topo) */
+    /* COMPACTAÇÃO DA PÁGINA */
     .block-container {
         padding-top: 1.5rem !important; 
         padding-bottom: 1rem !important;
     }
     
-    /* HEADER COMPACTO E ELEGANTE */
+    /* HEADER COMPACTO */
     .header-container { 
         text-align: center; 
         padding-bottom: 15px;
@@ -84,24 +88,23 @@ st.markdown("""
     }
     
     .header-text { 
-        font-size: clamp(22px, 5vw, 32px) !important; /* Fonte levemente menor para caber melhor */
+        font-size: clamp(22px, 5vw, 32px) !important; 
         font-weight: 700; 
         color: #2e7bcf !important; 
         width: 100%; 
         display: block; 
-        line-height: 1.1 !important; /* Linhas mais próximas */
-        margin-bottom: 5px !important; /* Menos espaço abaixo do título */
+        line-height: 1.1 !important; 
+        margin-bottom: 5px !important; 
     }
     
     .subheader-text { 
         font-size: 14px !important; 
         color: #888888 !important; 
-        margin-top: 0px !important; /* Cola no título */
+        margin-top: 0px !important; 
         font-weight: 500; 
         letter-spacing: 0.5px;
     }
     
-    /* RESTO DO ESTILO MANTIDO */
     .welcome-box { 
         background-color: #f0f2f6; 
         padding: 15px; 
@@ -135,7 +138,6 @@ st.markdown("""
 # --- CABEÇALHO COMPACTO ---
 st.markdown('<div class="header-container">', unsafe_allow_html=True)
 if bin_str:
-    # Logo com margem inferior reduzida (margin-bottom: 5px)
     st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 140px; height: auto; display: block; margin: 0 auto 5px auto;">', unsafe_allow_html=True)
 else:
     st.markdown('<p class="header-text">🏗️ Nick Hull Emerson Engineering</p>', unsafe_allow_html=True)
@@ -241,8 +243,11 @@ if finalidade != "Selecione uma opção...":
     with c1: bairro = st.text_input("Bairro", value=st.session_state.bairro, placeholder="Bairro...")
     with c2: cidade = st.text_input("Cidade", value=st.session_state.cidade, placeholder="Cidade...")
 
-    iptu = st.text_input("Número do IPTU (Contribuinte) *", placeholder="000.000.000-0")
-    area = st.number_input("Área Aproximada (m²) *", min_value=0.0, step=10.0)
+    # IPTU OBRIGATÓRIO E FILTRADO
+    iptu = st.text_input("Número do IPTU * (Obrigatório - Somente nº, ponto ou traço)", placeholder="000.000.000-0")
+    
+    # ÁREA OBRIGATÓRIA
+    area = st.number_input("Área Aproximada (m²) * (Obrigatório)", min_value=0.0, step=10.0)
     
     st.write("Tipo de documentação de posse disponível:")
     c_mat = st.checkbox("Possuo Matrícula")
@@ -293,7 +298,7 @@ if finalidade != "Selecione uma opção...":
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
         
-        # --- VALIDAÇÃO RÍGIDA REATIVADA (CPF/NOME/CEP) ---
+        # --- VALIDAÇÃO DE RIGOR FORENSE ---
         erros_criticos = []
         
         # 1. LGPD
@@ -304,20 +309,29 @@ if finalidade != "Selecione uma opção...":
         if finalidade == "Selecione uma opção...":
             erros_criticos.append("⚠️ Selecione a finalidade do trabalho.")
 
-        # 3. Nome/Razão Social (Obrigatório)
+        # 3. Nome/Razão Social
         if not nome_resp or len(nome_resp.strip()) < 3:
             erros_criticos.append("⚠️ O Nome/Razão Social é obrigatório.")
 
-        # 4. Documento (Obrigatório)
+        # 4. Documento
         if not doc_resp or len(doc_resp.strip()) < 5:
             erros_criticos.append("⚠️ O CPF ou CNPJ é obrigatório.")
 
-        # 5. CEP (Obrigatório)
-        # Atenção: cep_input está dentro de coluna, verificamos a variável do session ou o input direto
+        # 5. CEP
         if not cep_input or len(cep_input.strip()) < 8:
-             erros_criticos.append("⚠️ O CEP é obrigatório para localização.")
+             erros_criticos.append("⚠️ O CEP é obrigatório.")
+
+        # 6. IPTU (Obrigatório e Formato)
+        if not iptu:
+            erros_criticos.append("⚠️ O Número do IPTU é obrigatório.")
+        elif not validar_iptu_formato(iptu):
+            erros_criticos.append("⚠️ O IPTU contém caracteres inválidos. Use apenas números, pontos e traços.")
+
+        # 7. Área (Obrigatório > 0)
+        if area <= 0:
+            erros_criticos.append("⚠️ A Área aproximada deve ser maior que zero.")
             
-        # 6. Usucapião Específico
+        # 8. Usucapião Específico
         if "Usucapião" in finalidade and anos == 0:
             erros_criticos.append("⚠️ Informe o tempo de posse (anos).")
 
@@ -346,7 +360,6 @@ if finalidade != "Selecione uma opção...":
             safe_ender = ender if ender else st.session_state.logradouro
             safe_bairro = bairro if bairro else st.session_state.bairro
             safe_cidade = cidade if cidade else st.session_state.cidade
-            safe_iptu = iptu if iptu else ""
             
             msg_whatsapp = f"""*NOVO DIAGNÓSTICO - NICK HULL EMERSON*
 ---------------------------------------
@@ -361,7 +374,7 @@ if finalidade != "Selecione uma opção...":
 CEP: {cep_input}
 
 📐 *Dados Técnicos:*
-IPTU: {safe_iptu}
+IPTU: {iptu}
 Área: {area} m²
 Proprietário: {proprietario}
 
