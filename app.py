@@ -18,50 +18,46 @@ def get_base64_logo(file_path):
 
 bin_str = get_base64_logo("logo.png")
 
-# --- ESTILO CSS (CORREÇÃO DE CONTRASTE FORENSE) ---
+# --- ESTILO CSS (CORREÇÕES UX) ---
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
     .block-container {
         padding-top: 1rem !important; 
-        margin-top: -10px !important;
+        margin-top: -20px !important;
     }
     
-    /* 1. TÍTULO EM AZUL (Identidade Visual) */
     .header-text { 
         font-size: clamp(24px, 5vw, 36px) !important; 
         font-weight: 700; 
         color: #2e7bcf !important; 
         width: 100%; 
-        display: block;
-        margin-bottom: 0px; /* Isso remove o espaço de baixo da primeira linha */
-        line-height: 1.2;    /* Isso aproxima as linhas se elas quebrarem */
+        display: block; 
+        line-height: 1.2;
     }
     
     .subheader-text { 
         font-size: 16px !important; 
-        color: #888888 !important; /* Cinza médio (Legível em Dark e Light) */
+        color: #888888 !important; 
         margin-top: 5px; 
         font-weight: 500; 
     }
     
-    /* 2. CAIXA DE BOAS-VINDAS (Card Fixo) */
     .welcome-box { 
-        background-color: #f0f2f6; /* Cinza bem claro */
+        background-color: #f0f2f6; 
         padding: 20px; 
         border-radius: 10px; 
         border-left: 5px solid #2e7bcf; 
         text-align: justify; 
         margin-bottom: 20px;
         font-size: 14px;
-        color: #31333F !important; /* Texto Escuro Fixo */
+        color: #31333F !important; 
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    /* 3. NOVA CAIXA DE INFORMAÇÃO (Substitui o st.info para garantir leitura) */
     .custom-info-box {
-        background-color: #e1f5fe; /* Azul muito claro (Fixo) */
-        color: #0277bd !important; /* Azul Escuro (Fixo) - Legibilidade total */
+        background-color: #e1f5fe; 
+        color: #0277bd !important; 
         padding: 15px;
         border-radius: 8px;
         border-left: 5px solid #0288d1;
@@ -70,11 +66,55 @@ st.markdown("""
         line-height: 1.5;
     }
     
-    /* 4. LISTAS E PROTOCOLOS */
+    /* DESTAQUE DE SERVIÇOS (NOVO) */
+    .services-hint {
+        background-color: #fff3cd;
+        color: #856404 !important;
+        padding: 12px;
+        border-radius: 8px;
+        border-left: 5px solid #ffc107;
+        margin-bottom: 10px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    /* DICA DE ROLAGEM (MOBILE) */
+    .scroll-hint {
+        text-align: center;
+        color: #2e7bcf;
+        font-size: 12px;
+        margin: 15px 0;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    /* CHECKBOX LGPD DESTACADA (CORREÇÃO PRINCIPAL) */
+    .lgpd-box {
+        background-color: #fff9e6;
+        border: 2px solid #ff9800;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+    .lgpd-box label {
+        color: #e65100 !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+    }
+    /* Forçar checkbox a ser visível */
+    .lgpd-box input[type="checkbox"] {
+        width: 24px !important;
+        height: 24px !important;
+        cursor: pointer !important;
+    }
+    
     .doc-list { 
         font-size: 13px; 
-        color: #31333F; /* Texto escuro */
-        background: #ffffff; /* Fundo branco fixo */
+        color: #31333F; 
+        background: #ffffff; 
         padding: 15px; 
         border-radius: 5px; 
         border: 1px dashed #2e7bcf; 
@@ -83,7 +123,7 @@ st.markdown("""
     
     .protocol-box { 
         background-color: #e8f5e9; 
-        color: #1b5e20; /* Verde escuro fixo */
+        color: #1b5e20; 
         padding: 15px; 
         border: 1px solid #25D366; 
         border-radius: 5px; 
@@ -92,7 +132,6 @@ st.markdown("""
         text-align: left; 
     }
     
-    /* 5. BOTÕES */
     .stButton>button { 
         width: 100%; 
         border-radius: 8px; 
@@ -130,7 +169,16 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- FORMULÁRIO ---
-nome_resp = st.text_input("Nome Completo do Responsável *", key="n_resp")
+nome_resp = st.text_input("Nome Completo do Responsável *", key="n_resp", placeholder="Ex: João Silva Santos")
+
+# --- CORREÇÃO 1: DESTAQUE DOS SERVIÇOS DISPONÍVEIS ---
+st.markdown("""
+<div class="services-hint">
+    🔍 <b>ATENÇÃO:</b> Oferecemos 10+ serviços de engenharia! Clique abaixo para ver a lista completa:
+    <br>Usucapião, Projetos Estruturais, CND, Avaliações, Reforços, Contenções e mais.
+</div>
+""", unsafe_allow_html=True)
+
 finalidade = st.selectbox("Finalidade do Trabalho *", [
     "Selecione uma opção...", 
     "Usucapião (Documentação)", 
@@ -144,6 +192,10 @@ finalidade = st.selectbox("Finalidade do Trabalho *", [
     "Projetos de Instalações",
     "Projeto Arquitetônico"
 ])
+
+# --- CORREÇÃO 2: DICA DE ROLAGEM (MOBILE) ---
+if finalidade != "Selecione uma opção...":
+    st.markdown('<div class="scroll-hint">⬇️ Role para baixo para preencher os dados ⬇️</div>', unsafe_allow_html=True)
 
 if finalidade != "Selecione uma opção...":
     # Mensagens de Importância
@@ -160,7 +212,6 @@ if finalidade != "Selecione uma opção...":
         "Projeto Arquitetônico": "Harmonia entre estética, funcionalidade e aproveitamento de espaço."
     }
     
-    # --- CORREÇÃO AQUI: Substituímos st.info por nossa caixa personalizada ---
     for k, v in mensagens.items():
         if k in finalidade: 
             st.markdown(f"""
@@ -174,23 +225,23 @@ if finalidade != "Selecione uma opção...":
 
     st.write("### 📍 Localização e Triagem Fiscal")
     col1, col2 = st.columns([3, 1])
-    with col1: ender = st.text_input("Logradouro (Rua/Av) *")
-    with col2: num = st.text_input("Nº *")
+    with col1: ender = st.text_input("Logradouro (Rua/Av) *", placeholder="Ex: Rua das Flores")
+    with col2: num = st.text_input("Nº *", placeholder="123")
     
     c1, c2, c3 = st.columns(3)
-    with c1: cep = st.text_input("CEP *")
-    with c2: bairro = st.text_input("Bairro *")
-    with c3: cidade = st.text_input("Cidade *")
+    with c1: cep = st.text_input("CEP *", placeholder="00000-000")
+    with c2: bairro = st.text_input("Bairro *", placeholder="Centro")
+    with c3: cidade = st.text_input("Cidade *", placeholder="São Paulo")
 
-    iptu = st.text_input("Número do IPTU (Contribuinte) *")
-    area = st.number_input("Área Aproximada (m²) *", min_value=0.0)
+    iptu = st.text_input("Número do IPTU (Contribuinte) *", placeholder="000.000.000-0")
+    area = st.number_input("Área Aproximada (m²) *", min_value=0.0, step=10.0)
     
     st.write("Tipo de documentação de posse disponível:")
     c_mat = st.checkbox("Possuo Matrícula")
     c_cont = st.checkbox("Possuo Contrato de Compra e Venda")
 
     st.write("---")
-    proprietario = st.text_input("Nome do Proprietário (conforme Matrícula/Contrato) *")
+    proprietario = st.text_input("Nome do Proprietário (conforme Matrícula/Contrato) *", placeholder="Ex: Maria da Silva")
     
     if nome_resp and proprietario and nome_resp.strip().lower() != proprietario.strip().lower():
         st.error("⚠️ Divergência: O nome do responsável difere do proprietário registrado.")
@@ -202,9 +253,9 @@ if finalidade != "Selecione uma opção...":
     if any(s in finalidade for s in servicos_documentais):
         req_text = ""
         if "Usucapião" in finalidade:
-            req_text = "• Matrícula ou Contrato<br>• Documento de Identidade<br>• Carnê IPTU<br>• Projeto existente (se houver)"
+            req_text = "• Matrícula ou Contrato<br>• Documento de Identidade<br>• Capa do IPTU<br>• Projeto existente (se houver)"
         elif "Retificação" in finalidade:
-            req_text = "• Matrícula ou Transcrição<br>• Documento de Identidade<br>• Carnê IPTU<br>• Levantamento anterior"
+            req_text = "• Matrícula ou Transcrição<br>• Documento de Identidade<br>• Capa do IPTU<br>• Levantamento anterior"
         elif "CND" in finalidade:
             req_text = "• Alvará/Projeto Aprovado<br>• Documento de Identidade<br>• Capa do IPTU<br>• Notas Fiscais"
         elif "Avaliação" in finalidade:
@@ -226,18 +277,24 @@ if finalidade != "Selecione uma opção...":
     files = st.file_uploader("Pré-Seleção de Arquivos (Inventário)", accept_multiple_files=True, type=['pdf','png','jpg','jpeg'])
 
     st.write("---")
-    st.write("### 🔒 Privacidade e Protocolo")
-    lgpd_check = st.checkbox("Concordo com o tratamento dos meus dados pessoais (LGPD).")
+    
+    # --- CORREÇÃO 3: CHECKBOX LGPD DESTACADA ---
+    st.markdown('<div class="lgpd-box">', unsafe_allow_html=True)
+    st.write("### 🔒 PASSO OBRIGATÓRIO: Autorização de Dados")
+    st.warning("⚠️ Marque a caixa abaixo para prosseguir:")
+    lgpd_check = st.checkbox("✅ Concordo com o tratamento dos meus dados pessoais (LGPD) conforme Lei nº 13.709/2018.", key="lgpd_aceite")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
-        # Validação Rígida
+        # --- CORREÇÃO 4: VALIDAÇÃO RELAXADA PARA AUTOFILL ---
+        # Usamos 'or ""' para evitar que None quebre, e verificamos apenas se há "algo"
         campos_obrigatorios = {
-            "Nome do Responsável": nome_resp.strip(),
-            "Logradouro": ender.strip(),
-            "Bairro": bairro.strip(),
-            "Cidade": cidade.strip(),
-            "CEP": cep.strip(),
-            "IPTU": iptu.strip(),
+            "Nome do Responsável": bool(nome_resp and len(str(nome_resp).strip()) > 0),
+            "Logradouro": bool(ender and len(str(ender).strip()) > 0),
+            "Bairro": bool(bairro and len(str(bairro).strip()) > 0),
+            "Cidade": bool(cidade and len(str(cidade).strip()) > 0),
+            "CEP": bool(cep and len(str(cep).strip()) > 0),
+            "IPTU": bool(iptu and len(str(iptu).strip()) > 0),
             "Área": area > 0,
             "Documento de Posse": (c_mat or c_cont),
             "Aceite LGPD": lgpd_check
@@ -246,17 +303,18 @@ if finalidade != "Selecione uma opção...":
         erros = []
         for campo, preenchido in campos_obrigatorios.items():
             if not preenchido:
-                erros.append(f"O campo '{campo}' é obrigatório.")
+                erros.append(f"❌ O campo '{campo}' é obrigatório.")
 
-        if len(nome_resp.strip()) < 10:
-            erros.append("O nome deve ser completo para identificação.")
+        if nome_resp and len(str(nome_resp).strip()) < 10:
+            erros.append("❌ O nome deve ser completo para identificação.")
         
         if erros:
+            st.error("### ⚠️ Campos Obrigatórios Não Preenchidos:")
             for e in erros: st.error(e)
         else:
             protocolo_id = f"NH-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
             
-            # --- PROCESSAMENTO DO INVENTÁRIO ---
+            # Processamento do Inventário
             qtd_arquivos = len(files) if files else 0
             if qtd_arquivos > 0:
                 lista_arquivos = [f.name for f in files]
@@ -265,7 +323,7 @@ if finalidade != "Selecione uma opção...":
             else:
                 msg_arquivos = "Nenhum arquivo listado na pré-conferência."
 
-            # --- ÁREA DE SUCESSO ---
+            # Área de Sucesso
             st.markdown(f"""
             <div class="protocol-box">
                 <h3 style="color:#1b5e20; margin:0;">✅ Diagnóstico Iniciado: {protocolo_id}</h3><br>
@@ -275,7 +333,7 @@ if finalidade != "Selecione uma opção...":
             </div>
             """, unsafe_allow_html=True)
             
-            # --- LINK WHATSAPP ---
+            # Link WhatsApp
             msg_whatsapp = f"""*NOVO DIAGNÓSTICO - NICK HULL EMERSON*
 ---------------------------------------
 🆔 *Protocolo:* {protocolo_id}
@@ -311,7 +369,7 @@ Proprietário: {proprietario}
             
             st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">Toque para abrir o WhatsApp</div>', unsafe_allow_html=True)
 
-# --- RODAPÉ MOBILE (SUPORTE) ---
+# --- RODAPÉ ---
 st.markdown("---")
 st.write("### 💬 Precisa de Ajuda?")
 link_sup = "https://wa.me/5511998511552?text=Olá Emerson, preciso de ajuda no Portal."
