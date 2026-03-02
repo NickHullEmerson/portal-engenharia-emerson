@@ -3,9 +3,37 @@ import base64
 import urllib.parse
 from datetime import datetime
 import random
+import requests  # NECESSÁRIO PARA A API DE CEP
+import time
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Nick Hull Emerson Engineering", page_icon="🏗️", layout="centered")
+
+# --- INICIALIZAÇÃO DO ESTADO DA SESSÃO (MEMÓRIA TEMPORÁRIA) ---
+# Isso garante que quando a API preencher, os dados fiquem fixos na tela
+if 'logradouro' not in st.session_state: st.session_state.logradouro = ''
+if 'bairro' not in st.session_state: st.session_state.bairro = ''
+if 'cidade' not in st.session_state: st.session_state.cidade = ''
+
+# --- FUNÇÃO DE BUSCA DE CEP (INTEGRAÇÃO VIACEP) ---
+def buscar_cep():
+    # Pega o valor digitado no CEP, remove traços e espaços
+    cep_digitado = st.session_state.cep_input.replace("-", "").replace(".", "").strip()
+    
+    if len(cep_digitado) == 8:
+        try:
+            response = requests.get(f"https://viacep.com.br/ws/{cep_digitado}/json/")
+            dados = response.json()
+            
+            if "erro" not in dados:
+                st.session_state.logradouro = dados['logradouro']
+                st.session_state.bairro = dados['bairro']
+                st.session_state.cidade = dados['localidade']
+                # Opcional: Adicionar UF se quiser: dados['uf']
+            else:
+                st.toast("⚠️ CEP não encontrado na base de dados.", icon="❌")
+        except:
+            st.toast("⚠️ Erro de conexão ao buscar CEP.", icon="📡")
 
 # --- FUNÇÃO PARA TRATAMENTO DE IMAGEM ---
 def get_base64_logo(file_path):
@@ -18,16 +46,16 @@ def get_base64_logo(file_path):
 
 bin_str = get_base64_logo("logo.png")
 
-# --- ESTILO CSS (UX OTIMIZADA) ---
+# --- ESTILO CSS ---
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
     .block-container {
         padding-top: 1rem !important; 
-        margin-top: -15px !important;
+        margin-top: -20px !important;
     }
     
-    .header-text { 
+   .header-text { 
         font-size: clamp(24px, 5vw, 36px) !important; 
         font-weight: 700; 
         color: #2e7bcf !important; 
@@ -181,7 +209,7 @@ st.markdown("""
 finalidade = st.selectbox("Finalidade do Trabalho *", [
     "Selecione uma opção...", 
     "Usucapião (Documentação)", 
-    "AVCB/CLCB Bombeiro",  # NOVO SERVIÇO ADICIONADO
+    "AVCB/CLCB Bombeiro", 
     "Retificação de Área", 
     "CND de Obra", 
     "Reforço Estrutural", 
@@ -198,7 +226,7 @@ if finalidade != "Selecione uma opção...":
     st.markdown('<div class="scroll-hint">⬇️ Role para baixo para preencher os dados ⬇️</div>', unsafe_allow_html=True)
 
 if finalidade != "Selecione uma opção...":
-    # Mensagens de Importância (ATUALIZADO COM AVCB)
+    # Mensagens de Importância
     mensagens = {
         "Usucapião": "Valoriza o imóvel em até 40% e garante a propriedade real.",
         "AVCB": "Licença essencial para funcionamento comercial e segurança contra incêndios.",
@@ -225,14 +253,26 @@ if finalidade != "Selecione uma opção...":
         anos = st.number_input("Há quantos anos você possui a posse do imóvel? *", min_value=0, step=1)
 
     st.write("### 📍 Localização e Triagem Fiscal")
-    col1, col2 = st.columns([3, 1])
-    with col1: ender = st.text_input("Logradouro (Rua/Av) *", placeholder="Ex: Rua das Flores")
-    with col2: num = st.text_input("Nº *", placeholder="123")
+    st.info("💡 Digite o CEP e aperte Enter para preencher o endereço automaticamente.")
     
-    c1, c2, c3 = st.columns(3)
-    with c1: cep = st.text_input("CEP *", placeholder="00000-000")
-    with c2: bairro = st.text_input("Bairro *", placeholder="Centro")
-    with c3: cidade = st.text_input("Cidade *", placeholder="São Paulo")
+    # --- SISTEMA DE CEP AUTOMATIZADO ---
+    col_cep, col_num = st.columns([2, 1])
+    
+    with col_cep:
+        # Quando o usuário digita o CEP e sai do campo (on_change), a função buscar_cep é chamada
+        cep_input = st.text_input("CEP * (Somente números)", key="cep_input", on_change=buscar_cep, placeholder="00000000")
+    
+    with col_num: 
+        num = st.text_input("Nº *", placeholder="123")
+
+    # Os campos abaixo são preenchidos pelo session_state automaticamente
+    ender = st.text_input("Logradouro *", value=st.session_state.logradouro, placeholder="Rua...")
+    
+    c1, c2 = st.columns(2)
+    with c1: 
+        bairro = st.text_input("Bairro *", value=st.session_state.bairro, placeholder="Bairro...")
+    with c2: 
+        cidade = st.text_input("Cidade *", value=st.session_state.cidade, placeholder="Cidade...")
 
     iptu = st.text_input("Número do IPTU (Contribuinte) *", placeholder="000.000.000-0")
     area = st.number_input("Área Aproximada (m²) *", min_value=0.0, step=10.0)
@@ -244,8 +284,6 @@ if finalidade != "Selecione uma opção...":
     st.write("---")
     proprietario = st.text_input("Nome do Proprietário (conforme Matrícula/Contrato) *", placeholder="Ex: Maria da Silva")
     
-    # REMOVIDO AVISO DE DIVERGÊNCIA DE NOMES PARA REDUZIR ATRITO
-
     st.write("### 📂 Documentação e Evidências")
     
     servicos_documentais = ["Usucapião", "Retificação", "CND", "Avaliação", "AVCB"]
@@ -289,23 +327,15 @@ if finalidade != "Selecione uma opção...":
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
         
-        # --- ESTRATÉGIA FORENSE DE BAIXO ATRITO ---
-        # 1. Validação RELAXADA: Removemos a checagem obrigatória de campos de texto (endereço, nome, iptu).
-        #    Motivo: Falha de detecção de Autofill dos navegadores bloqueava o usuário.
-        #    Ação: Se o campo vier vazio, o protocolo é gerado e o Eng. Emerson pede no WhatsApp.
-        
-        # 2. Validação RÍGIDA APENAS para o essencial:
+        # --- VALIDAÇÃO (BAIXO ATRITO) ---
         erros_criticos = []
         
-        # LGPD é inegociável (Rigor Jurídico)
         if not lgpd_check:
             erros_criticos.append("⚠️ O aceite da LGPD é obrigatório para prosseguir.")
             
-        # Finalidade é necessária para lógica do app
         if finalidade == "Selecione uma opção...":
             erros_criticos.append("⚠️ Selecione a finalidade do trabalho.")
             
-        # Se Usucapião, tempo de posse é crítico (Número não sofre bug de autofill de texto)
         if "Usucapião" in finalidade and anos == 0:
             erros_criticos.append("⚠️ Informe o tempo de posse (anos) para Usucapião.")
 
@@ -314,7 +344,6 @@ if finalidade != "Selecione uma opção...":
         else:
             protocolo_id = f"NH-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
             
-            # Processamento do Inventário
             qtd_arquivos = len(files) if files else 0
             if qtd_arquivos > 0:
                 lista_arquivos = [f.name for f in files]
@@ -323,7 +352,6 @@ if finalidade != "Selecione uma opção...":
             else:
                 msg_arquivos = "Nenhum arquivo listado na pré-conferência."
 
-            # Área de Sucesso
             st.markdown(f"""
             <div class="protocol-box">
                 <h3 style="color:#1b5e20; margin:0;">✅ Diagnóstico Iniciado: {protocolo_id}</h3><br>
@@ -333,11 +361,12 @@ if finalidade != "Selecione uma opção...":
             </div>
             """, unsafe_allow_html=True)
             
-            # Link WhatsApp - Prevenindo erros de variáveis vazias (None)
+            # Tratamento de variáveis vazias para não dar erro
             safe_nome = nome_resp if nome_resp else "Não informado (Autofill)"
             safe_ender = ender if ender else ""
             safe_bairro = bairro if bairro else ""
             safe_cidade = cidade if cidade else ""
+            safe_cep = cep_input if cep_input else "" # Pega a variável do session
             safe_iptu = iptu if iptu else ""
             
             msg_whatsapp = f"""*NOVO DIAGNÓSTICO - NICK HULL EMERSON*
@@ -349,7 +378,7 @@ if finalidade != "Selecione uma opção...":
 
 📍 *Localização:*
 {safe_ender}, {num} - {safe_bairro}, {safe_cidade}
-CEP: {cep}
+CEP: {safe_cep}
 
 📐 *Dados Técnicos:*
 IPTU: {safe_iptu}
