@@ -29,8 +29,9 @@ st.markdown("""
         font-weight: 700; 
         color: #2e7bcf !important; 
         width: 100%; 
-        display: block; 
-        line-height: 1.2;
+        display: block;
+        margin-bottom: 0px; /* Isso remove o espaço de baixo da primeira linha */
+        line-height: 1.2;    /* Isso aproxima as linhas se elas quebrarem */
     }
     
     .subheader-text { 
