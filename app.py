@@ -392,12 +392,12 @@ Proprietário: {proprietario}
             st.markdown(f'''
                 <a href="{link_wa}" target="_blank" style="text-decoration:none;">
                     <button style="width:100%; background-color:#25D366; color:white; border:none; padding:15px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:18px;">
-                        📲 CONFIRMAR NO WHATSAPP
+                        📲 CLIQUE AQUI PARA FINALIZAR
                     </button>
                 </a>
             ''', unsafe_allow_html=True)
             
-            st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">Toque para abrir o WhatsApp</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">O seu WhatsApp será aberto com o relatório pronto; encaminhe a mensagem e anexe as fotos. </div>', unsafe_allow_html=True)
 
 # --- RODAPÉ ---
 st.markdown("---")
