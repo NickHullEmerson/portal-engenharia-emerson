@@ -17,37 +17,39 @@ if 'razao_social' not in st.session_state: st.session_state.razao_social = ''
 
 # --- FUNÇÃO DE BUSCA DE CEP (VIACEP) ---
 def buscar_cep():
-    cep_digitado = st.session_state.cep_input.replace("-", "").replace(".", "").strip()
-    if len(cep_digitado) == 8:
-        try:
-            response = requests.get(f"https://viacep.com.br/ws/{cep_digitado}/json/")
-            dados = response.json()
-            if "erro" not in dados:
-                st.session_state.logradouro = dados['logradouro']
-                st.session_state.bairro = dados['bairro']
-                st.session_state.cidade = dados['localidade']
-            else:
-                st.toast("⚠️ CEP não encontrado.", icon="❌")
-        except:
-            pass
+    # Verifica se a chave existe antes de tentar acessar
+    if 'cep_input' in st.session_state:
+        cep_digitado = st.session_state.cep_input.replace("-", "").replace(".", "").strip()
+        if len(cep_digitado) == 8:
+            try:
+                response = requests.get(f"https://viacep.com.br/ws/{cep_digitado}/json/")
+                dados = response.json()
+                if "erro" not in dados:
+                    st.session_state.logradouro = dados['logradouro']
+                    st.session_state.bairro = dados['bairro']
+                    st.session_state.cidade = dados['localidade']
+                else:
+                    st.toast("⚠️ CEP não encontrado.", icon="❌")
+            except:
+                pass
 
 # --- FUNÇÃO DE BUSCA DE CNPJ (BRASILAPI) ---
 def buscar_cnpj():
-    cnpj_digitado = st.session_state.cnpj_input.replace("-", "").replace(".", "").replace("/", "").strip()
-    if len(cnpj_digitado) == 14:
-        try:
-            # Usando BrasilAPI que é pública e gratuita para dados de empresas
-            response = requests.get(f"https://brasilapi.com.br/api/cnpj/v1/{cnpj_digitado}")
-            if response.status_code == 200:
-                dados = response.json()
-                st.session_state.razao_social = dados['razao_social']
-                st.toast("✅ Empresa localizada!", icon="🏢")
-            else:
-                st.toast("⚠️ CNPJ não encontrado.", icon="❌")
-        except:
-            pass
+    if 'cnpj_input' in st.session_state:
+        cnpj_digitado = st.session_state.cnpj_input.replace("-", "").replace(".", "").replace("/", "").strip()
+        if len(cnpj_digitado) == 14:
+            try:
+                response = requests.get(f"https://brasilapi.com.br/api/cnpj/v1/{cnpj_digitado}")
+                if response.status_code == 200:
+                    dados = response.json()
+                    st.session_state.razao_social = dados['razao_social']
+                    st.toast("✅ Empresa localizada!", icon="🏢")
+                else:
+                    st.toast("⚠️ CNPJ não encontrado.", icon="❌")
+            except:
+                pass
 
-# --- VALIDAÇÃO SIMPLES DE CPF (MATEMÁTICA) ---
+# --- VALIDAÇÃO SIMPLES DE CPF ---
 def validar_cpf_formato(cpf):
     cpf = re.sub(r'[^0-9]', '', cpf)
     return len(cpf) == 11
@@ -63,53 +65,81 @@ def get_base64_logo(file_path):
 
 bin_str = get_base64_logo("logo.png")
 
-# --- ESTILO CSS ---
+# --- ESTILO CSS (HEADER COMPACTO E VISUAL FORENSE) ---
 st.markdown("""
     <style>
- <style>
+    .main { background-color: #0e1117; }
+    
+    /* COMPACTAÇÃO DA PÁGINA (Remove espaços brancos do topo) */
     .block-container {
-        /* Aumentei o padding para dar mais "cabeça" (espaço no topo) */
-        padding-top: 3rem !important; 
+        padding-top: 1.5rem !important; 
+        padding-bottom: 1rem !important;
     }
-
+    
+    /* HEADER COMPACTO E ELEGANTE */
+    .header-container { 
+        text-align: center; 
+        padding-bottom: 15px;
+        margin-bottom: 10px;
+    }
+    
     .header-text { 
-        font-size: clamp(22px, 5vw, 34px) !important; 
+        font-size: clamp(22px, 5vw, 32px) !important; /* Fonte levemente menor para caber melhor */
         font-weight: 700; 
         color: #2e7bcf !important; 
         width: 100%; 
         display: block; 
-        text-align: center;
-        
-        /* AJUSTES SOLICITADOS */
-  letter-spacing: -1px !important;  /* Letras mais juntas */
-    line-height: 6.0 !important;      /* VALOR CORRIGIDO: 1.0 aproxima as linhas */
-    margin-top: -90px !important;     /* PUXA PARA CIMA: Aumentei para -30px */
-    margin-bottom: 5px !important;    /* Quase nenhum espaço para a linha de baixo */
-    display: block !important;
-
-    /* Classe específica para a primeira linha se quiser ajustes diferentes */
-    .main-title {
-        margin-bottom: 0px !important;
+        line-height: 1.1 !important; /* Linhas mais próximas */
+        margin-bottom: 5px !important; /* Menos espaço abaixo do título */
     }
-
+    
     .subheader-text { 
-        font-size: clamp(14px, 4vw, 16px) !important; 
+        font-size: 14px !important; 
         color: #888888 !important; 
-        text-align: center;
-        margin-top: 0px !important;
-        letter-spacing: -0.5px !important; /* Letras do subtítulo também mais juntas */
+        margin-top: 0px !important; /* Cola no título */
+        font-weight: 500; 
+        letter-spacing: 0.5px;
     }
-</style>
+    
+    /* RESTO DO ESTILO MANTIDO */
+    .welcome-box { 
+        background-color: #f0f2f6; 
+        padding: 15px; 
+        border-radius: 10px; 
+        border-left: 5px solid #2e7bcf; 
+        text-align: justify; 
+        margin-bottom: 15px;
+        font-size: 14px;
+        color: #31333F !important; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .custom-info-box { background-color: #e1f5fe; color: #0277bd !important; padding: 15px; border-radius: 8px; border-left: 5px solid #0288d1; margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
+    .services-hint { background-color: #fff3cd; color: #856404 !important; padding: 12px; border-radius: 8px; border-left: 5px solid #ffc107; margin-bottom: 10px; font-size: 13px; font-weight: 600; }
+    
+    .scroll-hint { text-align: center; color: #2e7bcf; font-size: 12px; margin: 15px 0; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
+    .lgpd-box { background-color: #fff9e6; border: 2px solid #ff9800; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    .lgpd-box label { color: #e65100 !important; font-weight: 700 !important; font-size: 15px !important; }
+    .lgpd-box input[type="checkbox"] { width: 24px !important; height: 24px !important; cursor: pointer !important; }
+    
+    .doc-list { font-size: 13px; color: #31333F; background: #ffffff; padding: 15px; border-radius: 5px; border: 1px dashed #2e7bcf; line-height: 1.5; }
+    .protocol-box { background-color: #e8f5e9; color: #1b5e20; padding: 15px; border: 1px solid #25D366; border-radius: 5px; margin-top: 20px; margin-bottom: 20px; text-align: left; }
+    
+    .stButton>button { width: 100%; border-radius: 8px; background-color: #2e7bcf; color: white !important; font-weight: bold; height: 4em; border: none; }
+    .stButton>button:hover { background-color: #3b8ee0; border: none; }
+    </style>
     """, unsafe_allow_html=True)
 
-# --- CABEÇALHO ---
+# --- CABEÇALHO COMPACTO ---
 st.markdown('<div class="header-container">', unsafe_allow_html=True)
 if bin_str:
-    st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 150px; height: auto; display: block; margin: 0 auto; margin-bottom: 10px;">', unsafe_allow_html=True)
+    # Logo com margem inferior reduzida (margin-bottom: 5px)
+    st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 140px; height: auto; display: block; margin: 0 auto 5px auto;">', unsafe_allow_html=True)
 else:
-    st.markdown('<p class="header-text main-title">🏗️ Nick Hull Emerson Engineering</p>', unsafe_allow_html=True)
+    st.markdown('<p class="header-text">🏗️ Nick Hull Emerson Engineering</p>', unsafe_allow_html=True)
 
-# Removido o <br> para eliminar o buraco entre as linhas
 st.markdown('<p class="header-text">Portal de Diagnóstico Estratégico</p>', unsafe_allow_html=True)
 st.markdown('<p class="subheader-text">Precisão e Estratégia | Low-Friction Systems</p>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
@@ -119,12 +149,11 @@ st.markdown(f"""
 <div class="welcome-box">
     <b>Bem-vindo(a)!</b><br><br>
     Agradecemos a confiança na <b>Nick Hull Emerson Engineering</b>. Realizamos uma triagem técnica detalhada para garantir a 
-    segurança jurídica e estrutural do seu patrimônio.<br><br>
-    <i>"A engenharia de excelência começa nos detalhes da informação."</i>
+    segurança jurídica e estrutural do seu patrimônio.
 </div>
 """, unsafe_allow_html=True)
 
-# --- DADOS DO CLIENTE (COM INTEGRAÇÃO CNPJ) ---
+# --- IDENTIFICAÇÃO (OBRIGATÓRIA) ---
 st.write("### 👤 Identificação do Responsável")
 
 tipo_pessoa = st.radio("Tipo de Pessoa:", ["Pessoa Física (CPF)", "Pessoa Jurídica (CNPJ)"], horizontal=True)
@@ -133,19 +162,15 @@ nome_resp = ""
 doc_resp = ""
 
 if tipo_pessoa == "Pessoa Física (CPF)":
-    # CPF apenas valida formato, não puxa nome (LGPD)
-    doc_resp = st.text_input("CPF *", placeholder="000.000.000-00")
+    doc_resp = st.text_input("CPF * (Obrigatório)", placeholder="000.000.000-00")
     if doc_resp and not validar_cpf_formato(doc_resp):
         st.caption("⚠️ O formato do CPF parece incompleto.")
-    nome_resp = st.text_input("Nome Completo do Responsável *", placeholder="Ex: João Silva Santos")
+    nome_resp = st.text_input("Nome Completo * (Obrigatório)", placeholder="Ex: João Silva Santos")
 
 else:
-    # CNPJ puxa o nome automaticamente via BrasilAPI
     st.info("💡 Digite o CNPJ e aperte Enter para buscar o nome da empresa.")
-    doc_resp = st.text_input("CNPJ *", key="cnpj_input", on_change=buscar_cnpj, placeholder="00.000.000/0000-00")
-    # O valor vem do session_state se foi encontrado, ou permite digitação manual
-    nome_resp = st.text_input("Razão Social / Nome da Empresa *", value=st.session_state.razao_social, placeholder="Nome da Empresa Ltda")
-
+    doc_resp = st.text_input("CNPJ * (Obrigatório)", key="cnpj_input", on_change=buscar_cnpj, placeholder="00.000.000/0000-00")
+    nome_resp = st.text_input("Razão Social * (Obrigatório)", value=st.session_state.razao_social, placeholder="Nome da Empresa Ltda")
 
 # --- DESTAQUE DOS SERVIÇOS ---
 st.markdown("""
@@ -206,15 +231,15 @@ if finalidade != "Selecione uma opção...":
     
     col_cep, col_num = st.columns([2, 1])
     with col_cep:
-        cep_input = st.text_input("CEP * (Somente números)", key="cep_input", on_change=buscar_cep, placeholder="00000000")
+        cep_input = st.text_input("CEP * (Obrigatório)", key="cep_input", on_change=buscar_cep, placeholder="00000000")
     with col_num: 
         num = st.text_input("Nº *", placeholder="123")
 
-    ender = st.text_input("Logradouro *", value=st.session_state.logradouro, placeholder="Rua...")
+    ender = st.text_input("Logradouro", value=st.session_state.logradouro, placeholder="Rua...")
     
     c1, c2 = st.columns(2)
-    with c1: bairro = st.text_input("Bairro *", value=st.session_state.bairro, placeholder="Bairro...")
-    with c2: cidade = st.text_input("Cidade *", value=st.session_state.cidade, placeholder="Cidade...")
+    with c1: bairro = st.text_input("Bairro", value=st.session_state.bairro, placeholder="Bairro...")
+    with c2: cidade = st.text_input("Cidade", value=st.session_state.cidade, placeholder="Cidade...")
 
     iptu = st.text_input("Número do IPTU (Contribuinte) *", placeholder="000.000.000-0")
     area = st.number_input("Área Aproximada (m²) *", min_value=0.0, step=10.0)
@@ -267,13 +292,34 @@ if finalidade != "Selecione uma opção...":
     st.markdown('</div>', unsafe_allow_html=True)
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
+        
+        # --- VALIDAÇÃO RÍGIDA REATIVADA (CPF/NOME/CEP) ---
         erros_criticos = []
+        
+        # 1. LGPD
         if not lgpd_check:
-            erros_criticos.append("⚠️ O aceite da LGPD é obrigatório para prosseguir.")
+            erros_criticos.append("⚠️ O aceite da LGPD é obrigatório.")
+            
+        # 2. Finalidade
         if finalidade == "Selecione uma opção...":
             erros_criticos.append("⚠️ Selecione a finalidade do trabalho.")
+
+        # 3. Nome/Razão Social (Obrigatório)
+        if not nome_resp or len(nome_resp.strip()) < 3:
+            erros_criticos.append("⚠️ O Nome/Razão Social é obrigatório.")
+
+        # 4. Documento (Obrigatório)
+        if not doc_resp or len(doc_resp.strip()) < 5:
+            erros_criticos.append("⚠️ O CPF ou CNPJ é obrigatório.")
+
+        # 5. CEP (Obrigatório)
+        # Atenção: cep_input está dentro de coluna, verificamos a variável do session ou o input direto
+        if not cep_input or len(cep_input.strip()) < 8:
+             erros_criticos.append("⚠️ O CEP é obrigatório para localização.")
+            
+        # 6. Usucapião Específico
         if "Usucapião" in finalidade and anos == 0:
-            erros_criticos.append("⚠️ Informe o tempo de posse (anos) para Usucapião.")
+            erros_criticos.append("⚠️ Informe o tempo de posse (anos).")
 
         if erros_criticos:
             for e in erros_criticos: st.error(e)
@@ -297,26 +343,22 @@ if finalidade != "Selecione uma opção...":
             </div>
             """, unsafe_allow_html=True)
             
-            # Variáveis seguras
-            safe_nome = nome_resp if nome_resp else "Não informado"
-            safe_doc = doc_resp if doc_resp else "Não informado"
-            safe_ender = ender if ender else ""
-            safe_bairro = bairro if bairro else ""
-            safe_cidade = cidade if cidade else ""
-            safe_cep = cep_input if cep_input else ""
+            safe_ender = ender if ender else st.session_state.logradouro
+            safe_bairro = bairro if bairro else st.session_state.bairro
+            safe_cidade = cidade if cidade else st.session_state.cidade
             safe_iptu = iptu if iptu else ""
             
             msg_whatsapp = f"""*NOVO DIAGNÓSTICO - NICK HULL EMERSON*
 ---------------------------------------
 🆔 *Protocolo:* {protocolo_id}
-👤 *Cliente:* {safe_nome}
-📄 *Documento:* {safe_doc}
+👤 *Cliente:* {nome_resp}
+📄 *Documento:* {doc_resp}
 🏗️ *Serviço:* {finalidade}
 ⏳ *Anos (Se Usucapião):* {anos if 'Usucapião' in finalidade else 'N/A'}
 
 📍 *Localização:*
 {safe_ender}, {num} - {safe_bairro}, {safe_cidade}
-CEP: {safe_cep}
+CEP: {cep_input}
 
 📐 *Dados Técnicos:*
 IPTU: {safe_iptu}
