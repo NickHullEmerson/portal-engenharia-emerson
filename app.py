@@ -4,8 +4,8 @@ import urllib.parse
 from datetime import datetime
 import random
 
-# --- CONFIGURAÇÃO DA PÁGINA ---
-st.set_page_config(page_title="Nick Hull Emerson Engineering | Portal", page_icon="🏗️", layout="centered")
+# --- CONFIGURAÇÃO DA PÁGINA (Layout Mobile-Friendly) ---
+st.set_page_config(page_title="Nick Hull Emerson Engineering", page_icon="🏗️", layout="centered")
 
 # --- FUNÇÃO PARA TRATAMENTO DE IMAGEM ---
 def get_base64_logo(file_path):
@@ -18,40 +18,84 @@ def get_base64_logo(file_path):
 
 bin_str = get_base64_logo("logo.png")
 
-# --- ESTILO CSS ---
+# --- ESTILO CSS (OTIMIZADO PARA MOBILE) ---
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
-    .header-container { text-align: center; padding: 10px 0px; }
-    .header-text { font-size: clamp(30px, 5vw, 38px) !important; font-weight: 600; color: #ffffff; width: 100%; display: block; }
-    .subheader-text { font-size: 18px !important; color: #2e7bcf; margin-top:-5px; font-weight: 500; }
-    .welcome-box { background-color: #1a1c24; padding: 25px; border-radius: 10px; border: 1px solid #2e7bcf; text-align: justify; margin-bottom: 25px;}
-    .doc-list { font-size: 14px; color: #aeb9cc; background: #161b22; padding: 15px; border-radius: 5px; border: 1px dashed #2e7bcf; line-height: 1.6; }
-    .protocol-box { background-color: #1c2e2e; padding: 15px; border: 1px solid #25D366; border-radius: 5px; margin-top: 20px; margin-bottom: 20px; text-align: left; }
-    .stButton>button { width: 100%; border-radius: 5px; background-color: #2e7bcf; color: white; font-weight: bold; height: 3.5em; border: none; }
+    
+    /* Ajuste de Fontes para Mobile (Clamp reduzido) */
+    .header-text { 
+        font-size: clamp(24px, 5vw, 36px) !important; 
+        font-weight: 600; 
+        color: #ffffff; 
+        width: 100%; 
+        display: block; 
+        line-height: 1.2;
+    }
+    
+    .subheader-text { 
+        font-size: 16px !important; 
+        color: #2e7bcf; 
+        margin-top: 5px; 
+        font-weight: 500; 
+    }
+    
+    .welcome-box { 
+        background-color: #1a1c24; 
+        padding: 20px; 
+        border-radius: 10px; 
+        border: 1px solid #2e7bcf; 
+        text-align: justify; 
+        margin-bottom: 20px;
+        font-size: 14px; /* Melhor leitura em mobile */
+    }
+    
+    .doc-list { 
+        font-size: 13px; 
+        color: #aeb9cc; 
+        background: #161b22; 
+        padding: 15px; 
+        border-radius: 5px; 
+        border: 1px dashed #2e7bcf; 
+        line-height: 1.5; 
+    }
+    
+    .protocol-box { 
+        background-color: #1c2e2e; 
+        padding: 15px; 
+        border: 1px solid #25D366; 
+        border-radius: 5px; 
+        margin-top: 20px; 
+        margin-bottom: 20px; 
+        text-align: left; 
+    }
+    
+    /* Botões grandes para toque (Touch Friendly) */
+    .stButton>button { 
+        width: 100%; 
+        border-radius: 8px; 
+        background-color: #2e7bcf; 
+        color: white; 
+        font-weight: bold; 
+        height: 4em; /* Mais alto para facilitar o toque */
+        border: none; 
+    }
     .stButton>button:hover { background-color: #3b8ee0; border: none; }
+    
+    /* Centralização do Header */
+    .header-container { text-align: center; padding: 20px 0px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- BARRA LATERAL (SIDEBAR) ---
-with st.sidebar:
-    if bin_str:
-        st.markdown(f'<img src="data:image/png;base64,{bin_str}" width="100%">', unsafe_allow_html=True)
-    st.markdown("### 💬 Suporte Direto")
-    st.write("Dúvidas sobre os dados ou documentos?")
-    link_sup = "https://wa.me/5511998511552?text=Olá Emerson, preciso de ajuda no Portal."
-    st.markdown(f'<a href="{link_sup}" target="_blank" style="text-decoration:none;"><div style="padding:10px; border:1px solid #25D366; color:#25D366; border-radius:5px; text-align:center; font-weight:bold;">Falar com o Engenheiro</div></a>', unsafe_allow_html=True)
-    st.markdown("---")
-    st.caption("Nick Hull Emerson Engineering | Low-Friction Systems")
-
-# --- CABEÇALHO ---
+# --- CABEÇALHO (LOGO AGORA NO TOPO CENTRAL) ---
 st.markdown('<div class="header-container">', unsafe_allow_html=True)
 if bin_str:
-    st.markdown(f'<img src="data:image/png;base64,{bin_str}" width="180" style="display: block; margin: 0 auto;">', unsafe_allow_html=True)
+    # Logo responsivo (Max width garante que não estoure a tela)
+    st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">', unsafe_allow_html=True)
 else:
     st.markdown('<p class="header-text">🏗️ Nick Hull Emerson Engineering</p>', unsafe_allow_html=True)
 
-st.markdown('<p class="header-text">Portal de Diagnóstico Estratégico</p>', unsafe_allow_html=True)
+st.markdown('<br><p class="header-text">Portal de Diagnóstico Estratégico</p>', unsafe_allow_html=True)
 st.markdown('<p class="subheader-text">Precisão e Estratégia | Low-Friction Systems</p>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -60,7 +104,7 @@ st.markdown(f"""
 <div class="welcome-box">
     <b>Bem-vindo(a)!</b><br><br>
     Agradecemos a confiança na <b>Nick Hull Emerson Engineering</b>. Realizamos uma triagem técnica detalhada para garantir a 
-    segurança jurídica e estrutural do seu patrimônio de forma ágil e eficiente.<br><br>
+    segurança jurídica e estrutural do seu patrimônio.<br><br>
     <i>"A engenharia de excelência começa nos detalhes da informação."</i>
 </div>
 """, unsafe_allow_html=True)
@@ -104,6 +148,7 @@ if finalidade != "Selecione uma opção...":
         anos = st.number_input("Há quantos anos você possui a posse do imóvel? *", min_value=0, step=1)
 
     st.write("### 📍 Localização e Triagem Fiscal")
+    # Em mobile, colunas se empilham automaticamente. Mantemos a estrutura pois fica bom em Desktop.
     col1, col2 = st.columns([3, 1])
     with col1: ender = st.text_input("Logradouro (Rua/Av) *")
     with col2: num = st.text_input("Nº *")
@@ -117,9 +162,9 @@ if finalidade != "Selecione uma opção...":
     area = st.number_input("Área Aproximada (m²) *", min_value=0.0)
     
     st.write("Tipo de documentação de posse disponível:")
-    col_doc1, col_doc2 = st.columns(2)
-    with col_doc1: c_mat = st.checkbox("Possuo Matrícula")
-    with col_doc2: c_cont = st.checkbox("Possuo Contrato de Compra e Venda")
+    # Checkboxes empilhados verticalmente para facilitar o toque no celular
+    c_mat = st.checkbox("Possuo Matrícula")
+    c_cont = st.checkbox("Possuo Contrato de Compra e Venda")
 
     st.write("---")
     proprietario = st.text_input("Nome do Proprietário (conforme Matrícula/Contrato) *")
@@ -129,13 +174,12 @@ if finalidade != "Selecione uma opção...":
 
     st.write("### 📂 Documentação e Evidências")
     
-    # Lógica de Exibição SSD
     servicos_documentais = ["Usucapião", "Retificação", "CND", "Avaliação"]
     
     if any(s in finalidade for s in servicos_documentais):
         req_text = ""
         if "Usucapião" in finalidade:
-            req_text = "• Matrícula ou Contrato<br>• Documento de Identidade<br>• Capa do IPTU<br>• Projeto existente (se houver)"
+            req_text = "• Matrícula ou Contrato<br>• Documento de Identidade<br>• Carnê IPTU<br>• Projeto existente (se houver)"
         elif "Retificação" in finalidade:
             req_text = "• Matrícula ou Transcrição<br>• Documento de Identidade<br>• Carnê IPTU<br>• Levantamento anterior"
         elif "CND" in finalidade:
@@ -155,23 +199,21 @@ if finalidade != "Selecione uma opção...":
         </div><br>
         """, unsafe_allow_html=True)
 
-    # --- INVENTÁRIO DE ARQUIVOS ---
     st.info("ℹ️ Selecione os arquivos abaixo para registro no protocolo. O envio real ocorrerá no WhatsApp.")
     files = st.file_uploader("Pré-Seleção de Arquivos (Inventário)", accept_multiple_files=True, type=['pdf','png','jpg','jpeg'])
 
-    # --- LGPD E TERMOS ---
     st.write("---")
     st.write("### 🔒 Privacidade e Protocolo")
-    lgpd_check = st.checkbox("Concordo com o tratamento dos meus dados pessoais para fins de orçamento e análise técnica de engenharia, em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).")
+    lgpd_check = st.checkbox("Concordo com o tratamento dos meus dados pessoais (LGPD).")
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
-        # Validação Rígida - CORREÇÃO DO CEP APLICADA AQUI
+        # Validação Rígida
         campos_obrigatorios = {
             "Nome do Responsável": nome_resp.strip(),
             "Logradouro": ender.strip(),
             "Bairro": bairro.strip(),
             "Cidade": cidade.strip(),
-            "CEP": cep.strip(),  # <--- CORREÇÃO: CEP AGORA É OBRIGATÓRIO
+            "CEP": cep.strip(),
             "IPTU": iptu.strip(),
             "Área": area > 0,
             "Documento de Posse": (c_mat or c_cont),
@@ -189,10 +231,9 @@ if finalidade != "Selecione uma opção...":
         if erros:
             for e in erros: st.error(e)
         else:
-            # Geração de ID Único
             protocolo_id = f"NH-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
             
-            # --- PROCESSAMENTO DO INVENTÁRIO DE ARQUIVOS ---
+            # --- PROCESSAMENTO DO INVENTÁRIO ---
             qtd_arquivos = len(files) if files else 0
             if qtd_arquivos > 0:
                 lista_arquivos = [f.name for f in files]
@@ -201,22 +242,17 @@ if finalidade != "Selecione uma opção...":
             else:
                 msg_arquivos = "Nenhum arquivo listado na pré-conferência."
 
-            # --- ÁREA DE SUCESSO E INSTRUÇÕES ---
+            # --- ÁREA DE SUCESSO ---
             st.markdown(f"""
             <div class="protocol-box">
                 <h3 style="color:#25D366; margin:0;">✅ Diagnóstico Iniciado: {protocolo_id}</h3><br>
-                <b>Inventário de Entrega:</b><br>
-                Foram registrados {qtd_arquivos} documentos/fotos neste protocolo. <br>
-                <i>Certifique-se de anexá-los na conversa do WhatsApp.</i><br><br>
-                <b>Próximos Passos Obrigatórios:</b><br>
-                1. Clique no botão verde abaixo para abrir o WhatsApp.<br>
-                2. <b>ANEXE AS FOTOS E DOCUMENTOS</b> listados.<br>
-                3. Nossa engenharia fará a triagem técnica.<br><br>
-                🕒 <b>SLA (Prazo de Resposta):</b> Orçamento/Parecer preliminar em 24h a 48h úteis após o recebimento das imagens.
+                <b>Inventário:</b> {qtd_arquivos} arquivos registrados.<br><br>
+                <b>PASSO FINAL:</b> Clique abaixo e anexe as mídias no WhatsApp.<br>
+                🕒 <b>Prazo:</b> 24h a 48h úteis.
             </div>
             """, unsafe_allow_html=True)
             
-            # --- CONSTRUÇÃO DO LINK WHATSAPP COM INVENTÁRIO ---
+            # --- LINK WHATSAPP ---
             msg_whatsapp = f"""*NOVO DIAGNÓSTICO - NICK HULL EMERSON*
 ---------------------------------------
 🆔 *Protocolo:* {protocolo_id}
@@ -232,7 +268,7 @@ IPTU: {iptu}
 Área: {area} m²
 Proprietário: {proprietario}
 
-📂 *INVENTÁRIO DE DOCUMENTOS:*
+📂 *INVENTÁRIO:*
 {msg_arquivos}
 
 🔐 *LGPD:* Aceite confirmado em {datetime.now().strftime('%d/%m/%Y')}
@@ -244,13 +280,19 @@ Proprietário: {proprietario}
             
             st.markdown(f'''
                 <a href="{link_wa}" target="_blank" style="text-decoration:none;">
-                    <button style="width:100%; background-color:#25D366; color:white; border:none; padding:15px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:18px;">
-                        📲 CONFIRMAR ENVIO NO WHATSAPP
+                    <button style="width:100%; background-color:#25D366; color:white; border:none; padding:15px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:18px;">
+                        📲 CONFIRMAR NO WHATSAPP
                     </button>
                 </a>
             ''', unsafe_allow_html=True)
             
-            st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">ℹ️ Ao clicar, os dados serão transferidos. Anexe as mídias para validar o protocolo.</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">Toque para abrir o WhatsApp</div>', unsafe_allow_html=True)
 
+# --- RODAPÉ MOBILE (SUPORTE) ---
 st.markdown("---")
+st.write("### 💬 Precisa de Ajuda?")
+link_sup = "https://wa.me/5511998511552?text=Olá Emerson, preciso de ajuda no Portal."
+st.markdown(f'<a href="{link_sup}" target="_blank" style="text-decoration:none;"><div style="padding:15px; border:1px solid #2e7bcf; color:#2e7bcf; border-radius:8px; text-align:center; font-weight:bold;">Falar com o Engenheiro</div></a>', unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
 st.caption("© 2026 Nick Hull Emerson Engineering | Low-Friction Systems")
