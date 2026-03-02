@@ -397,7 +397,7 @@ Proprietário: {proprietario}
                 </a>
             ''', unsafe_allow_html=True)
             
-            st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">O seu WhatsApp será aberto com o relatório pronto; encaminhe a mensagem e anexe as fotos. </div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">O seu WhatsApp será aberto com o relatório pronto; anexe as fotos e encaminhe a mensagem.</div>', unsafe_allow_html=True)
 
 # --- RODAPÉ ---
 st.markdown("---")
