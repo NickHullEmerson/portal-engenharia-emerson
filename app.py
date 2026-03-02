@@ -18,48 +18,46 @@ def get_base64_logo(file_path):
 
 bin_str = get_base64_logo("logo.png")
 
-# --- ESTILO CSS (OTIMIZADO PARA MOBILE) ---
+# --- ESTILO CSS (CORRIGIDO PARA LEITURA E MOBILE) ---
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
     
-    /* Ajuste de Fontes para Mobile (Clamp reduzido) */
+    /* Cabeçalho Ajustado */
+    .header-container { 
+        text-align: center; 
+        padding-top: 10px; 
+        padding-bottom: 20px; 
+    }
+    
     .header-text { 
-        font-size: clamp(24px, 5vw, 36px) !important; 
-        font-weight: 600; 
-        color: #ffffff; 
-        width: 100%; 
-        display: block; 
+        font-size: 26px !important; 
+        font-weight: 700; 
+        color: #ffffff !important; 
+        margin-bottom: 5px;
         line-height: 1.2;
     }
     
     .subheader-text { 
         font-size: 16px !important; 
-        color: #2e7bcf; 
-        margin-top: 5px; 
+        color: #2e7bcf !important; 
         font-weight: 500; 
     }
     
+    /* Novo Design da Caixa de Boas-Vindas (Legível) */
     .welcome-box { 
-        background-color: #1a1c24; 
+        background-color: #262730; /* Cinza mais claro que o fundo */
+        color: #ffffff !important; /* Texto branco forçado */
         padding: 20px; 
-        border-radius: 10px; 
-        border: 1px solid #2e7bcf; 
-        text-align: justify; 
-        margin-bottom: 20px;
-        font-size: 14px; /* Melhor leitura em mobile */
+        border-radius: 8px; 
+        border-left: 5px solid #2e7bcf; /* Detalhe azul lateral */
+        margin-bottom: 25px;
+        font-size: 15px;
+        line-height: 1.6;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
     
-    .doc-list { 
-        font-size: 13px; 
-        color: #aeb9cc; 
-        background: #161b22; 
-        padding: 15px; 
-        border-radius: 5px; 
-        border: 1px dashed #2e7bcf; 
-        line-height: 1.5; 
-    }
-    
+    /* Protocolo */
     .protocol-box { 
         background-color: #1c2e2e; 
         padding: 15px; 
@@ -70,36 +68,45 @@ st.markdown("""
         text-align: left; 
     }
     
-    /* Botões grandes para toque (Touch Friendly) */
+    /* Botões Otimizados para Toque */
     .stButton>button { 
         width: 100%; 
         border-radius: 8px; 
         background-color: #2e7bcf; 
         color: white; 
         font-weight: bold; 
-        height: 4em; /* Mais alto para facilitar o toque */
+        height: 3.8em; 
         border: none; 
+        font-size: 16px;
     }
     .stButton>button:hover { background-color: #3b8ee0; border: none; }
     
-    /* Centralização do Header */
-    .header-container { text-align: center; padding: 20px 0px; }
+    .doc-list { 
+        font-size: 14px; 
+        color: #e0e0e0; 
+        background: #1e1e1e; 
+        padding: 15px; 
+        border-radius: 5px; 
+        border: 1px dashed #2e7bcf; 
+        line-height: 1.5; 
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- CABEÇALHO (LOGO AGORA NO TOPO CENTRAL) ---
+# --- CABEÇALHO (CORRIGIDO: LOGO + TEXTO SEMPRE VISÍVEIS) ---
 st.markdown('<div class="header-container">', unsafe_allow_html=True)
-if bin_str:
-    # Logo responsivo (Max width garante que não estoure a tela)
-    st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">', unsafe_allow_html=True)
-else:
-    st.markdown('<p class="header-text">🏗️ Nick Hull Emerson Engineering</p>', unsafe_allow_html=True)
 
-st.markdown('<br><p class="header-text">Portal de Diagnóstico Estratégico</p>', unsafe_allow_html=True)
-st.markdown('<p class="subheader-text">Precisão e Estratégia | Low-Friction Systems</p>', unsafe_allow_html=True)
+# 1. Logo (Se existir)
+if bin_str:
+    st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 140px; height: auto; display: block; margin: 0 auto 15px auto;">', unsafe_allow_html=True)
+
+# 2. Título (Sempre visível agora)
+st.markdown('<div class="header-text">🏗️ Nick Hull Emerson Engineering</div>', unsafe_allow_html=True)
+st.markdown('<div class="header-text" style="font-size: 20px !important;">Portal de Diagnóstico Estratégico</div>', unsafe_allow_html=True)
+st.markdown('<div class="subheader-text">Precisão e Estratégia | Low-Friction Systems</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- BOAS-VINDAS ---
+# --- BOAS-VINDAS (NOVO DESIGN) ---
 st.markdown(f"""
 <div class="welcome-box">
     <b>Bem-vindo(a)!</b><br><br>
@@ -148,21 +155,20 @@ if finalidade != "Selecione uma opção...":
         anos = st.number_input("Há quantos anos você possui a posse do imóvel? *", min_value=0, step=1)
 
     st.write("### 📍 Localização e Triagem Fiscal")
-    # Em mobile, colunas se empilham automaticamente. Mantemos a estrutura pois fica bom em Desktop.
-    col1, col2 = st.columns([3, 1])
-    with col1: ender = st.text_input("Logradouro (Rua/Av) *")
-    with col2: num = st.text_input("Nº *")
     
-    c1, c2, c3 = st.columns(3)
-    with c1: cep = st.text_input("CEP *")
-    with c2: bairro = st.text_input("Bairro *")
-    with c3: cidade = st.text_input("Cidade *")
-
+    # Inputs sequenciais para mobile (evita colunas espremidas)
+    ender = st.text_input("Logradouro (Rua/Av) *")
+    num = st.text_input("Nº *")
+    
+    col_cep, col_bairro = st.columns(2)
+    with col_cep: cep = st.text_input("CEP *")
+    with col_bairro: bairro = st.text_input("Bairro *")
+    
+    cidade = st.text_input("Cidade *")
     iptu = st.text_input("Número do IPTU (Contribuinte) *")
     area = st.number_input("Área Aproximada (m²) *", min_value=0.0)
     
     st.write("Tipo de documentação de posse disponível:")
-    # Checkboxes empilhados verticalmente para facilitar o toque no celular
     c_mat = st.checkbox("Possuo Matrícula")
     c_cont = st.checkbox("Possuo Contrato de Compra e Venda")
 
