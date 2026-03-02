@@ -54,7 +54,6 @@ def validar_cpf_formato(cpf):
     return len(cpf) == 11
 
 def validar_iptu_formato(iptu_texto):
-    # Permite apenas Números, Pontos e Traços. Rejeita letras ou espaços vazios.
     if not iptu_texto: return False
     return bool(re.match(r'^[0-9.-]+$', iptu_texto))
 
@@ -69,18 +68,16 @@ def get_base64_logo(file_path):
 
 bin_str = get_base64_logo("logo.png")
 
-# --- ESTILO CSS (HEADER COMPACTO E VISUAL FORENSE) ---
+# --- ESTILO CSS ---
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
     
-    /* COMPACTAÇÃO DA PÁGINA */
     .block-container {
         padding-top: 1.5rem !important; 
         padding-bottom: 1rem !important;
     }
     
-    /* HEADER COMPACTO */
     .header-container { 
         text-align: center; 
         padding-bottom: 15px;
@@ -177,13 +174,15 @@ else:
 # --- DESTAQUE DOS SERVIÇOS ---
 st.markdown("""
 <div class="services-hint">
-    🔍 <b>ATENÇÃO:</b> Selecione abaixo o serviço desejado (Temos 11 opções):
-    <br>Usucapião, AVCB Bombeiro, Projetos, CND, Avaliações, Reforços e mais.
+    🔍 <b>ATENÇÃO:</b> Selecione abaixo o serviço desejado (Temos 12 opções):
+    <br>Usucapião, Perícias, AVCB, Projetos, CND, Avaliações, Reforços e mais.
 </div>
 """, unsafe_allow_html=True)
 
+# --- INCLUSÃO DO NOVO SERVIÇO ---
 finalidade = st.selectbox("Finalidade do Trabalho *", [
     "Selecione uma opção...", 
+    "Perícias Técnicas de Engenharia", # NOVO
     "Usucapião (Documentação)", 
     "AVCB/CLCB Bombeiro", 
     "Retificação de Área", 
@@ -191,19 +190,19 @@ finalidade = st.selectbox("Finalidade do Trabalho *", [
     "Reforço Estrutural", 
     "Contenção | Muro de Arrimo", 
     "Projeto Estrutural", 
-    "Avaliação de Imóveis",
+    "Avaliação de Imóveis", 
     "Projeto de Fundação",
     "Projetos de Instalações",
     "Projeto Arquitetônico"
 ])
 
-# --- DICA DE ROLAGEM (MOBILE) ---
 if finalidade != "Selecione uma opção...":
     st.markdown('<div class="scroll-hint">⬇️ Role para baixo para preencher os dados ⬇️</div>', unsafe_allow_html=True)
 
 if finalidade != "Selecione uma opção...":
-    # Mensagens de Importância
+    # Mensagens de Importância (ATUALIZADO COM PERÍCIAS)
     mensagens = {
+        "Perícias": "Produção de prova técnica fundamentada para resolução de conflitos judiciais ou extrajudiciais.",
         "Usucapião": "Valoriza o imóvel em até 40% e garante a propriedade real.",
         "AVCB": "Licença essencial para funcionamento comercial e segurança contra incêndios.",
         "Retificação": "Ajuste físico-jurídico essencial para vendas e financiamentos.",
@@ -258,11 +257,14 @@ if finalidade != "Selecione uma opção...":
     
     st.write("### 📂 Documentação e Evidências")
     
-    servicos_documentais = ["Usucapião", "Retificação", "CND", "Avaliação", "AVCB"]
+    # ATUALIZADO COM PERÍCIAS NA LISTA DOCUMENTAL
+    servicos_documentais = ["Usucapião", "Retificação", "CND", "Avaliação", "AVCB", "Perícias"]
     
     if any(s in finalidade for s in servicos_documentais):
         req_text = ""
-        if "Usucapião" in finalidade:
+        if "Perícias" in finalidade:
+            req_text = "• Número do Processo (se houver)<br>• Projetos da edificação<br>• Relatórios de manutenção<br>• Quesitos (se houver)"
+        elif "Usucapião" in finalidade:
             req_text = "• Matrícula ou Contrato<br>• Documento de Identidade<br>• Capa do IPTU<br>• Projeto existente (se houver)"
         elif "Retificação" in finalidade:
             req_text = "• Matrícula ou Transcrição<br>• Documento de Identidade<br>• Capa do IPTU<br>• Levantamento anterior"
@@ -298,7 +300,6 @@ if finalidade != "Selecione uma opção...":
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
         
-        # --- VALIDAÇÃO DE RIGOR FORENSE ---
         erros_criticos = []
         
         # 1. LGPD
@@ -321,13 +322,13 @@ if finalidade != "Selecione uma opção...":
         if not cep_input or len(cep_input.strip()) < 8:
              erros_criticos.append("⚠️ O CEP é obrigatório.")
 
-        # 6. IPTU (Obrigatório e Formato)
+        # 6. IPTU
         if not iptu:
             erros_criticos.append("⚠️ O Número do IPTU é obrigatório.")
         elif not validar_iptu_formato(iptu):
             erros_criticos.append("⚠️ O IPTU contém caracteres inválidos. Use apenas números, pontos e traços.")
 
-        # 7. Área (Obrigatório > 0)
+        # 7. Área
         if area <= 0:
             erros_criticos.append("⚠️ A Área aproximada deve ser maior que zero.")
             
