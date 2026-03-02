@@ -22,6 +22,10 @@ bin_str = get_base64_logo("logo.png")
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
+    .block-container {
+        padding-top: 1rem !important; 
+        margin-top: -20px !important;
+    }
     
     /* 1. TÍTULO EM AZUL (Identidade Visual) */
     .header-text { 
