@@ -33,7 +33,10 @@ st.markdown("""
         color: #2e7bcf !important; 
         width: 100%; 
         display: block; 
-        line-height: 1.2;
+        /* AJUSTES DE APROXIMAÇÃO ABAIXO */
+        line-height: 1.0 !important;    /* Reduz o espaço entre linhas internas */
+        margin-bottom: -10px !important; /* Puxa a linha de baixo para cima */
+        padding-bottom: 0px !important;
     }
     
     .subheader-text { 
