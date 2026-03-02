@@ -4,7 +4,7 @@ import urllib.parse
 from datetime import datetime
 import random
 
-# --- CONFIGURAÇÃO DA PÁGINA ---
+# --- CONFIGURAÇÃO DA PÁGINA (Layout Mobile-Friendly) ---
 st.set_page_config(page_title="Nick Hull Emerson Engineering", page_icon="🏗️", layout="centered")
 
 # --- FUNÇÃO PARA TRATAMENTO DE IMAGEM ---
@@ -18,108 +18,94 @@ def get_base64_logo(file_path):
 
 bin_str = get_base64_logo("logo.png")
 
-# --- ESTILO CSS (HEADER BLINDADO + MOBILE) ---
+# --- ESTILO CSS (CORRIGIDO: AZUL NO CABEÇALHO) ---
 st.markdown("""
     <style>
-    /* Força o fundo geral para evitar clarão excessivo, mas permite light mode nos inputs */
-    .stApp {
-        background-color: #f0f2f6; /* Fundo cinza bem claro para o corpo */
-    }
+    .main { background-color: #0e1117; }
     
-    /* --- CABEÇALHO DARK (BLINDADO) --- */
-    .header-container { 
-        background-color: #1a1c24; /* Fundo ESCURO fixo para destacar logo branco */
-        padding-top: 30px; 
-        padding-bottom: 30px; 
-        padding-left: 15px;
-        padding-right: 15px;
-        margin-top: -60px; /* Sobe para o topo da tela */
-        border-bottom: 4px solid #2e7bcf; /* Linha de Engenharia */
-        border-radius: 0 0 15px 15px; /* Arredondado embaixo (Estilo App) */
-        text-align: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        margin-bottom: 25px;
+    /* Força texto escuro nos inputs para não sumir no fundo branco */
+    .stTextInput label, .stSelectbox label, .stNumberInput label, .stCheckbox label, p {
+        color: #262730 !important;
     }
-    
+
+    /* TÍTULO AGORA EM AZUL (SOLUÇÃO DO CONTRASTE) */
     .header-text { 
-        font-family: 'Helvetica', sans-serif;
-        font-size: 24px !important; 
+        font-size: clamp(24px, 5vw, 36px) !important; 
         font-weight: 700; 
-        color: #ffffff !important; /* Texto BRANCO forçado */
-        margin-bottom: 5px;
+        color: #2e7bcf !important; /* <--- MUDANÇA AQUI: BRANCO PARA AZUL */
+        width: 100%; 
+        display: block; 
         line-height: 1.2;
     }
     
     .subheader-text { 
-        font-size: 15px !important; 
-        color: #2e7bcf !important; /* Azul da marca */
+        font-size: 16px !important; 
+        color: #555555 !important; /* Cinza escuro para contraste */
+        margin-top: 5px; 
         font-weight: 500; 
-        opacity: 0.9;
     }
     
-    /* --- CORPO DA PÁGINA --- */
-    
-    /* Caixa de Boas-vindas */
+    /* SOLUÇÃO DO QUADRADO PRETO: Agora é um Card Claro Profissional */
     .welcome-box { 
-        background-color: #ffffff; 
-        color: #333333; 
+        background-color: #f8f9fa; /* Cinza muito claro */
         padding: 20px; 
-        border-radius: 8px; 
+        border-radius: 10px; 
         border-left: 5px solid #2e7bcf; 
-        margin-bottom: 25px;
-        font-size: 15px;
-        line-height: 1.6;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        text-align: justify; 
+        margin-bottom: 20px;
+        font-size: 14px;
+        color: #333333 !important; /* Texto escuro */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     
-    /* Protocolo (Verde Sucesso) */
-    .protocol-box { 
-        background-color: #e8f5e9; 
-        color: #1b5e20;
-        padding: 15px; 
-        border: 1px solid #25D366; 
-        border-radius: 8px; 
-        margin-top: 20px; 
-        margin-bottom: 20px; 
-        text-align: left; 
-    }
-    
-    /* Botões Otimizados para Toque */
-    .stButton>button { 
-        width: 100%; 
-        border-radius: 8px; 
-        background-color: #2e7bcf; 
-        color: white; 
-        font-weight: bold; 
-        height: 3.8em; 
-        border: none; 
-        font-size: 16px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-    .stButton>button:hover { background-color: #3b8ee0; border: none; }
-    
-    /* Listas de Documentos */
     .doc-list { 
-        font-size: 14px; 
+        font-size: 13px; 
         color: #444; 
-        background: #ffffff; 
+        background: #ffffff; /* Fundo branco para leitura */
         padding: 15px; 
         border-radius: 5px; 
         border: 1px dashed #2e7bcf; 
         line-height: 1.5; 
     }
+    
+    .protocol-box { 
+        background-color: #e8f5e9; /* Fundo verde claro suave */
+        padding: 15px; 
+        border: 1px solid #25D366; 
+        border-radius: 5px; 
+        margin-top: 20px; 
+        margin-bottom: 20px; 
+        text-align: left; 
+    }
+    
+    /* Botões grandes para toque (Touch Friendly) */
+    .stButton>button { 
+        width: 100%; 
+        border-radius: 8px; 
+        background-color: #2e7bcf; 
+        color: white !important; 
+        font-weight: bold; 
+        height: 4em; 
+        border: none; 
+    }
+    .stButton>button:hover { background-color: #3b8ee0; border: none; }
+    
+    /* Centralização do Header */
+    .header-container { text-align: center; padding: 20px 0px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- CABEÇALHO (AGORA COM FUNDO ESCURO) ---
+# --- CABEÇALHO ---
 st.markdown('<div class="header-container">', unsafe_allow_html=True)
-
-# Logo (Branco sobre Fundo Escuro = Perfeito)
 if bin_str:
-    st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 150px; height: auto; display: block; margin: 0 auto 10px auto;">', unsafe_allow_html=True)
+    # Logo responsivo
+    st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">', unsafe_allow_html=True)
+else:
+    # Se não tiver logo, mostra o nome em AZUL
+    st.markdown('<p class="header-text">🏗️ Nick Hull Emerson Engineering</p>', unsafe_allow_html=True)
 
-st.markdown('<div class="header-text">🏗️ Nick Hull Emerson Engineering</div>', unsafe_allow_html=True)
-st.markdown('<div class="subheader-text">Precisão e Estratégia | Low-Friction Systems</div>', unsafe_allow_html=True)
+st.markdown('<br><p class="header-text">Portal de Diagnóstico Estratégico</p>', unsafe_allow_html=True)
+st.markdown('<p class="subheader-text">Precisão e Estratégia | Low-Friction Systems</p>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # --- BOAS-VINDAS ---
@@ -171,17 +157,16 @@ if finalidade != "Selecione uma opção...":
         anos = st.number_input("Há quantos anos você possui a posse do imóvel? *", min_value=0, step=1)
 
     st.write("### 📍 Localização e Triagem Fiscal")
+    # Layout mantido
+    col1, col2 = st.columns([3, 1])
+    with col1: ender = st.text_input("Logradouro (Rua/Av) *")
+    with col2: num = st.text_input("Nº *")
     
-    # Layout Mobile: Inputs full width para evitar quebra
-    ender = st.text_input("Logradouro (Rua/Av) *")
-    num = st.text_input("Nº *")
-    
-    # CEP e Bairro lado a lado funciona bem em mobile
-    col_cep, col_bairro = st.columns(2)
-    with col_cep: cep = st.text_input("CEP *")
-    with col_bairro: bairro = st.text_input("Bairro *")
-    
-    cidade = st.text_input("Cidade *")
+    c1, c2, c3 = st.columns(3)
+    with c1: cep = st.text_input("CEP *")
+    with c2: bairro = st.text_input("Bairro *")
+    with c3: cidade = st.text_input("Cidade *")
+
     iptu = st.text_input("Número do IPTU (Contribuinte) *")
     area = st.number_input("Área Aproximada (m²) *", min_value=0.0)
     
@@ -309,9 +294,9 @@ Proprietário: {proprietario}
                 </a>
             ''', unsafe_allow_html=True)
             
-            st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">Toque para abrir o WhatsApp</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align:center; font-size:12px; color:#666; margin-top:10px;">Toque para abrir o WhatsApp</div>', unsafe_allow_html=True)
 
-# --- RODAPÉ ---
+# --- RODAPÉ MOBILE (SUPORTE) ---
 st.markdown("---")
 st.write("### 💬 Precisa de Ajuda?")
 link_sup = "https://wa.me/5511998511552?text=Olá Emerson, preciso de ajuda no Portal."
