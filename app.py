@@ -3,66 +3,9 @@ import base64
 import urllib.parse
 from datetime import datetime
 import random
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
-import io
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Nick Hull Emerson Engineering | Portal", page_icon="🏗️", layout="centered")
-
-# --- FUNÇÃO PARA CONEXÃO COM GOOGLE DRIVE (ESTRATÉGIA ANTI-COTA) ---
-def upload_to_drive(protocolo, nome_cliente, arquivos_carregados):
-    try:
-        creds_info = st.secrets["gcp_service_account"]
-        creds = service_account.Credentials.from_service_account_info(creds_info)
-        service = build('drive', 'v3', credentials=creds)
-
-        ID_PASTA_MAE = "1COAkvKbohr0yxV6YHeyqJx6BM1o-sKFw" 
-
-        # 1. Cria a pasta do cliente
-        folder_metadata = {
-            'name': f"{protocolo} - {nome_cliente}",
-            'mimeType': 'application/vnd.google-apps.folder',
-            'parents': [ID_PASTA_MAE]
-        }
-        
-        # O segredo: supportsAllDrives=True e usar o seu espaço
-        folder = service.files().create(
-            body=folder_metadata, 
-            fields='id',
-            supportsAllDrives=True
-        ).execute()
-        folder_id = folder.get('id')
-
-        # 2. Faz o upload dos arquivos
-        if arquivos_carregados:
-            for uploaded_file in arquivos_carregados:
-                file_metadata = {
-                    'name': uploaded_file.name, 
-                    'parents': [folder_id]
-                }
-                media = MediaIoBaseUpload(
-                    io.BytesIO(uploaded_file.getvalue()), 
-                    mimetype=uploaded_file.type, 
-                    resumable=True
-                )
-                
-                service.files().create(
-                    body=file_metadata, 
-                    media_body=media, 
-                    fields='id',
-                    supportsAllDrives=True
-                ).execute()
-        
-        return folder_id
-    except Exception as e:
-        # Se ainda der erro de cota, exibimos uma mensagem mais clara
-        if "storageQuotaExceeded" in str(e):
-            st.error("Erro de Cota: A conta de serviço atingiu o limite. Verifique se o compartilhamento na pasta do Drive está como EDITOR.")
-        else:
-            st.error(f"Erro na integração com Drive: {e}")
-        return None
 
 # --- FUNÇÃO PARA TRATAMENTO DE IMAGEM ---
 def get_base64_logo(file_path):
@@ -84,7 +27,9 @@ st.markdown("""
     .subheader-text { font-size: 18px !important; color: #2e7bcf; margin-top:-5px; font-weight: 500; }
     .welcome-box { background-color: #1a1c24; padding: 25px; border-radius: 10px; border: 1px solid #2e7bcf; text-align: justify; margin-bottom: 25px;}
     .doc-list { font-size: 14px; color: #aeb9cc; background: #161b22; padding: 15px; border-radius: 5px; border: 1px dashed #2e7bcf; line-height: 1.6; }
-    .protocol-box { background-color: #1c2e2e; padding: 15px; border: 1px solid #25D366; border-radius: 5px; margin-top: 20px; margin-bottom: 20px; }
+    .protocol-box { background-color: #1c2e2e; padding: 15px; border: 1px solid #25D366; border-radius: 5px; margin-top: 20px; margin-bottom: 20px; text-align: left; }
+    .stButton>button { width: 100%; border-radius: 5px; background-color: #2e7bcf; color: white; font-weight: bold; height: 3.5em; border: none; }
+    .stButton>button:hover { background-color: #3b8ee0; border: none; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -137,6 +82,7 @@ finalidade = st.selectbox("Finalidade do Trabalho *", [
 ])
 
 if finalidade != "Selecione uma opção...":
+    # Mensagens de Importância
     mensagens = {
         "Usucapião": "Valoriza o imóvel em até 40% e garante a propriedade real.",
         "Retificação": "Ajuste físico-jurídico essencial para vendas e financiamentos.",
@@ -153,6 +99,10 @@ if finalidade != "Selecione uma opção...":
     for k, v in mensagens.items():
         if k in finalidade: 
             st.info(f"**Importância:** {v}")
+
+    # Usucapião Específico
+    if "Usucapião" in finalidade:
+        anos = st.number_input("Há quantos anos você possui a posse do imóvel? *", min_value=0, step=1)
 
     st.write("### 📍 Localização e Triagem Fiscal")
     col1, col2 = st.columns([3, 1])
@@ -179,42 +129,114 @@ if finalidade != "Selecione uma opção...":
         st.error("⚠️ Divergência: O nome do responsável difere do proprietário registrado.")
 
     st.write("### 📂 Documentação e Evidências")
+    
+    # Lógica de Exibição SSD
     servicos_documentais = ["Usucapião", "Retificação", "CND", "Avaliação"]
     
     if any(s in finalidade for s in servicos_documentais):
-        req_text = "• Matrícula ou Contrato<br>• Documento de Identidade<br>• Carnê IPTU"
-        st.markdown(f'<div class="doc-list"><b>📄 Documentação necessária:</b><br>{req_text}</div><br>', unsafe_allow_html=True)
+        req_text = ""
+        if "Usucapião" in finalidade:
+            req_text = "• Matrícula ou Contrato<br>• Documento de Identidade<br>• Carnê IPTU<br>• Projeto existente (se houver)"
+        elif "Retificação" in finalidade:
+            req_text = "• Matrícula ou Transcrição<br>• Documento de Identidade<br>• Carnê IPTU<br>• Levantamento anterior"
+        elif "CND" in finalidade:
+            req_text = "• Alvará/Projeto Aprovado<br>• Documento de Identidade<br>• Capa do IPTU<br>• Notas Fiscais"
+        elif "Avaliação" in finalidade:
+            req_text = "• Matrícula atualizada<br>• Capa do IPTU<br>• Documento de Identidade<br>• Projeto arquitetônico"
+        
+        st.markdown(f'<div class="doc-list"><b>📄 Separe para enviar no WhatsApp:</b><br>{req_text}</div><br>', unsafe_allow_html=True)
     else:
-        st.markdown('<div class="doc-list"><b>📸 Guia de Fotos:</b><br>• Capa do IPTU<br>• Fotos da área/patologia.</div><br>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="doc-list">
+            <b>📸 Guia de Fotos (Para enviar no WhatsApp):</b><br>
+            • <b>IPTU:</b> Foto legível da capa.<br>
+            • <b>Patologias/Reforço:</b> Fotos de longe (contexto) e de perto (detalhe).<br>
+            • <b>Terrenos:</b> Fotos dos 4 cantos e desnível.<br>
+            • <b>Reformas:</b> Fotos panorâmicas dos ambientes.
+        </div><br>
+        """, unsafe_allow_html=True)
 
-    files = st.file_uploader("Selecione as Fotos ou PDFs para conferência", accept_multiple_files=True, type=['pdf','png','jpg','jpeg'])
+    # File Uploader como Validação de Prontidão (Sem API de Drive para evitar erro)
+    st.info("ℹ️ Utilize o botão abaixo para conferir se você já possui os arquivos no seu dispositivo. O envio real será feito pelo WhatsApp.")
+    files = st.file_uploader("Conferência de Arquivos (Opcional)", accept_multiple_files=True, type=['pdf','png','jpg','jpeg'])
 
+    # --- LGPD E TERMOS ---
     st.write("---")
-    st.write("### 🔒 Privacidade e Autorização")
-    lgpd_check = st.checkbox("Concordo com o tratamento dos meus dados pessoais (LGPD).")
+    st.write("### 🔒 Privacidade e Protocolo")
+    lgpd_check = st.checkbox("Concordo com o tratamento dos meus dados pessoais para fins de orçamento e análise técnica de engenharia, em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).")
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
-        if not nome_resp or not ender or not iptu or not lgpd_check:
-            st.error("Por favor, preencha os campos obrigatórios (*) e aceite a LGPD.")
+        # Validação Rígida
+        campos_obrigatorios = {
+            "Nome do Responsável": nome_resp.strip(),
+            "Logradouro": ender.strip(),
+            "Bairro": bairro.strip(),
+            "Cidade": cidade.strip(),
+            "IPTU": iptu.strip(),
+            "Área": area > 0,
+            "Documento de Posse": (c_mat or c_cont),
+            "Aceite LGPD": lgpd_check
+        }
+        
+        erros = []
+        for campo, preenchido in campos_obrigatorios.items():
+            if not preenchido:
+                erros.append(f"O campo '{campo}' é obrigatório.")
+
+        if len(nome_resp.strip()) < 10:
+            erros.append("O nome deve ser completo para identificação.")
+        
+        if erros:
+            for e in erros: st.error(e)
         else:
+            # Geração de ID Único
             protocolo_id = f"NH-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
             
-            with st.spinner('📦 Processando diagnóstico e salvando arquivos...'):
-                drive_id = upload_to_drive(protocolo_id, nome_resp, files)
+            # --- ÁREA DE SUCESSO E INSTRUÇÕES ---
+            st.markdown(f"""
+            <div class="protocol-box">
+                <h3 style="color:#25D366; margin:0;">✅ Diagnóstico Iniciado: {protocolo_id}</h3><br>
+                <b>Próximos Passos Obrigatórios:</b><br>
+                1. Clique no botão verde abaixo para abrir o WhatsApp.<br>
+                2. <b>ANEXE AS FOTOS E DOCUMENTOS</b> na conversa que irá abrir.<br>
+                3. Nossa engenharia fará a triagem técnica.<br><br>
+                🕒 <b>SLA (Prazo de Resposta):</b> Orçamento/Parecer preliminar em 24h a 48h úteis após o recebimento das imagens.<br>
+                🛠️ <b>Metodologia:</b> Análise forense de viabilidade técnica e jurídica.
+            </div>
+            """, unsafe_allow_html=True)
             
-            if drive_id:
-                st.balloons()
-                st.markdown(f"""
-                <div class="protocol-box">
-                    <h3 style="color:#25D366; margin:0;">✅ Diagnóstico Enviado com Sucesso!</h3><br>
-                    <b>Seu Protocolo: {protocolo_id}</b><br><br>
-                    Os dados e arquivos foram enviados para a central da <b>Nick Hull Emerson Engineering</b>.<br>
-                    🕒 <b>Prazo para análise:</b> 24h a 48h úteis.<br><br>
-                    <i>Entraremos em contato em breve.</i>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.warning("O diagnóstico foi registrado, mas os arquivos não puderam ser salvos no Drive devido à restrição de cota do Google. Entre em contato com o suporte.")
+            # --- CONSTRUÇÃO DO LINK WHATSAPP ---
+            msg_whatsapp = f"""*NOVO DIAGNÓSTICO - NICK HULL EMERSON*
+---------------------------------------
+🆔 *Protocolo:* {protocolo_id}
+👤 *Cliente:* {nome_resp}
+🏗️ *Serviço:* {finalidade}
+
+📍 *Localização:*
+{ender}, {num} - {bairro}, {cidade}
+CEP: {cep}
+
+📐 *Dados Técnicos:*
+IPTU: {iptu}
+Área: {area} m²
+Proprietário: {proprietario}
+
+🔐 *LGPD:* Aceite confirmado em {datetime.now().strftime('%d/%m/%Y')}
+
+⚠️ *PENDÊNCIA:* Estou anexando as fotos/documentos agora:
+"""
+            msg_encoded = urllib.parse.quote(msg_whatsapp)
+            link_wa = f"https://wa.me/5511998511552?text={msg_encoded}"
+            
+            st.markdown(f'''
+                <a href="{link_wa}" target="_blank" style="text-decoration:none;">
+                    <button style="width:100%; background-color:#25D366; color:white; border:none; padding:15px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:18px;">
+                        📲 ENVIAR DADOS E ANEXAR FOTOS
+                    </button>
+                </a>
+            ''', unsafe_allow_html=True)
+            
+            st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">ℹ️ Ao clicar, o WhatsApp abrirá com os dados preenchidos. Basta anexar as mídias.</div>', unsafe_allow_html=True)
 
 st.markdown("---")
 st.caption("© 2026 Nick Hull Emerson Engineering | Low-Friction Systems")
