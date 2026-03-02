@@ -24,7 +24,7 @@ st.markdown("""
     .main { background-color: #0e1117; }
     .block-container {
         padding-top: 1rem !important; 
-        margin-top: -20px !important;
+        margin-top: -15px !important;
     }
     
     .header-text { 
