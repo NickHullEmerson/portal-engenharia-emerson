@@ -165,12 +165,13 @@ if finalidade != "Selecione uma opção...":
     lgpd_check = st.checkbox("Concordo com o tratamento dos meus dados pessoais para fins de orçamento e análise técnica de engenharia, em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).")
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
-        # Validação Rígida
+        # Validação Rígida - CORREÇÃO DO CEP APLICADA AQUI
         campos_obrigatorios = {
             "Nome do Responsável": nome_resp.strip(),
             "Logradouro": ender.strip(),
             "Bairro": bairro.strip(),
             "Cidade": cidade.strip(),
+            "CEP": cep.strip(),  # <--- CORREÇÃO: CEP AGORA É OBRIGATÓRIO
             "IPTU": iptu.strip(),
             "Área": area > 0,
             "Documento de Posse": (c_mat or c_cont),
@@ -191,7 +192,7 @@ if finalidade != "Selecione uma opção...":
             # Geração de ID Único
             protocolo_id = f"NH-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
             
-            # --- PROCESSAMENTO DO INVENTÁRIO DE ARQUIVOS (FORENSE) ---
+            # --- PROCESSAMENTO DO INVENTÁRIO DE ARQUIVOS ---
             qtd_arquivos = len(files) if files else 0
             if qtd_arquivos > 0:
                 lista_arquivos = [f.name for f in files]
