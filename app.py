@@ -18,7 +18,7 @@ def get_base64_logo(file_path):
 
 bin_str = get_base64_logo("logo.png")
 
-# --- ESTILO CSS (CORREÇÕES UX) ---
+# --- ESTILO CSS (UX OTIMIZADA) ---
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
@@ -66,7 +66,6 @@ st.markdown("""
         line-height: 1.5;
     }
     
-    /* DESTAQUE DE SERVIÇOS (NOVO) */
     .services-hint {
         background-color: #fff3cd;
         color: #856404 !important;
@@ -78,7 +77,6 @@ st.markdown("""
         font-weight: 600;
     }
     
-    /* DICA DE ROLAGEM (MOBILE) */
     .scroll-hint {
         text-align: center;
         color: #2e7bcf;
@@ -91,7 +89,6 @@ st.markdown("""
         50% { opacity: 0.5; }
     }
     
-    /* CHECKBOX LGPD DESTACADA (CORREÇÃO PRINCIPAL) */
     .lgpd-box {
         background-color: #fff9e6;
         border: 2px solid #ff9800;
@@ -104,7 +101,6 @@ st.markdown("""
         font-weight: 700 !important;
         font-size: 15px !important;
     }
-    /* Forçar checkbox a ser visível */
     .lgpd-box input[type="checkbox"] {
         width: 24px !important;
         height: 24px !important;
@@ -171,17 +167,18 @@ st.markdown(f"""
 # --- FORMULÁRIO ---
 nome_resp = st.text_input("Nome Completo do Responsável *", key="n_resp", placeholder="Ex: João Silva Santos")
 
-# --- CORREÇÃO 1: DESTAQUE DOS SERVIÇOS DISPONÍVEIS ---
+# --- DESTAQUE DOS SERVIÇOS ---
 st.markdown("""
 <div class="services-hint">
-    🔍 <b>ATENÇÃO:</b> Oferecemos 10+ serviços de engenharia! Clique abaixo para ver a lista completa:
-    <br>Usucapião, Projetos Estruturais, CND, Avaliações, Reforços, Contenções e mais.
+    🔍 <b>ATENÇÃO:</b> Selecione abaixo o serviço desejado (Temos 11 opções):
+    <br>Usucapião, AVCB Bombeiro, Projetos, CND, Avaliações, Reforços e mais.
 </div>
 """, unsafe_allow_html=True)
 
 finalidade = st.selectbox("Finalidade do Trabalho *", [
     "Selecione uma opção...", 
     "Usucapião (Documentação)", 
+    "AVCB/CLCB Bombeiro",  # NOVO SERVIÇO ADICIONADO
     "Retificação de Área", 
     "CND de Obra", 
     "Reforço Estrutural", 
@@ -193,14 +190,15 @@ finalidade = st.selectbox("Finalidade do Trabalho *", [
     "Projeto Arquitetônico"
 ])
 
-# --- CORREÇÃO 2: DICA DE ROLAGEM (MOBILE) ---
+# --- DICA DE ROLAGEM (MOBILE) ---
 if finalidade != "Selecione uma opção...":
     st.markdown('<div class="scroll-hint">⬇️ Role para baixo para preencher os dados ⬇️</div>', unsafe_allow_html=True)
 
 if finalidade != "Selecione uma opção...":
-    # Mensagens de Importância
+    # Mensagens de Importância (ATUALIZADO COM AVCB)
     mensagens = {
         "Usucapião": "Valoriza o imóvel em até 40% e garante a propriedade real.",
+        "AVCB": "Licença essencial para funcionamento comercial e segurança contra incêndios.",
         "Retificação": "Ajuste físico-jurídico essencial para vendas e financiamentos.",
         "CND": "Regularidade fiscal perante a Receita Federal e averbação da obra.",
         "Reforço": "Intervenção para sanar patologias e riscos de desmoronamento.",
@@ -243,12 +241,11 @@ if finalidade != "Selecione uma opção...":
     st.write("---")
     proprietario = st.text_input("Nome do Proprietário (conforme Matrícula/Contrato) *", placeholder="Ex: Maria da Silva")
     
-    if nome_resp and proprietario and nome_resp.strip().lower() != proprietario.strip().lower():
-        st.error("⚠️ Divergência: O nome do responsável difere do proprietário registrado.")
+    # REMOVIDO AVISO DE DIVERGÊNCIA DE NOMES PARA REDUZIR ATRITO
 
     st.write("### 📂 Documentação e Evidências")
     
-    servicos_documentais = ["Usucapião", "Retificação", "CND", "Avaliação"]
+    servicos_documentais = ["Usucapião", "Retificação", "CND", "Avaliação", "AVCB"]
     
     if any(s in finalidade for s in servicos_documentais):
         req_text = ""
@@ -260,6 +257,8 @@ if finalidade != "Selecione uma opção...":
             req_text = "• Alvará/Projeto Aprovado<br>• Documento de Identidade<br>• Capa do IPTU<br>• Notas Fiscais"
         elif "Avaliação" in finalidade:
             req_text = "• Matrícula atualizada<br>• Capa do IPTU<br>• Documento de Identidade<br>• Projeto arquitetônico"
+        elif "AVCB" in finalidade:
+            req_text = "• Projeto de Incêndio (se houver)<br>• Notas Fiscais de equipamentos<br>• Área construída exata<br>• CNPJ (se houver)"
         
         st.markdown(f'<div class="doc-list"><b>📄 Separe para enviar no WhatsApp:</b><br>{req_text}</div><br>', unsafe_allow_html=True)
     else:
@@ -278,7 +277,7 @@ if finalidade != "Selecione uma opção...":
 
     st.write("---")
     
-    # --- CORREÇÃO 3: CHECKBOX LGPD DESTACADA ---
+    # --- CHECKBOX LGPD DESTACADA ---
     st.markdown('<div class="lgpd-box">', unsafe_allow_html=True)
     st.write("### 🔒 PASSO OBRIGATÓRIO: Autorização de Dados")
     st.warning("⚠️ Marque a caixa abaixo para prosseguir:")
@@ -286,31 +285,29 @@ if finalidade != "Selecione uma opção...":
     st.markdown('</div>', unsafe_allow_html=True)
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
-        # --- CORREÇÃO 4: VALIDAÇÃO RELAXADA PARA AUTOFILL ---
-        # Usamos 'or ""' para evitar que None quebre, e verificamos apenas se há "algo"
-        campos_obrigatorios = {
-            "Nome do Responsável": bool(nome_resp and len(str(nome_resp).strip()) > 0),
-            "Logradouro": bool(ender and len(str(ender).strip()) > 0),
-            "Bairro": bool(bairro and len(str(bairro).strip()) > 0),
-            "Cidade": bool(cidade and len(str(cidade).strip()) > 0),
-            "CEP": bool(cep and len(str(cep).strip()) > 0),
-            "IPTU": bool(iptu and len(str(iptu).strip()) > 0),
-            "Área": area > 0,
-            "Documento de Posse": (c_mat or c_cont),
-            "Aceite LGPD": lgpd_check
-        }
         
-        erros = []
-        for campo, preenchido in campos_obrigatorios.items():
-            if not preenchido:
-                erros.append(f"❌ O campo '{campo}' é obrigatório.")
+        # --- ESTRATÉGIA FORENSE DE BAIXO ATRITO ---
+        # 1. Validação RELAXADA: Removemos a checagem obrigatória de campos de texto (endereço, nome, iptu).
+        #    Motivo: Falha de detecção de Autofill dos navegadores bloqueava o usuário.
+        #    Ação: Se o campo vier vazio, o protocolo é gerado e o Eng. Emerson pede no WhatsApp.
+        
+        # 2. Validação RÍGIDA APENAS para o essencial:
+        erros_criticos = []
+        
+        # LGPD é inegociável (Rigor Jurídico)
+        if not lgpd_check:
+            erros_criticos.append("⚠️ O aceite da LGPD é obrigatório para prosseguir.")
+            
+        # Finalidade é necessária para lógica do app
+        if finalidade == "Selecione uma opção...":
+            erros_criticos.append("⚠️ Selecione a finalidade do trabalho.")
+            
+        # Se Usucapião, tempo de posse é crítico (Número não sofre bug de autofill de texto)
+        if "Usucapião" in finalidade and anos == 0:
+            erros_criticos.append("⚠️ Informe o tempo de posse (anos) para Usucapião.")
 
-        if nome_resp and len(str(nome_resp).strip()) < 10:
-            erros.append("❌ O nome deve ser completo para identificação.")
-        
-        if erros:
-            st.error("### ⚠️ Campos Obrigatórios Não Preenchidos:")
-            for e in erros: st.error(e)
+        if erros_criticos:
+            for e in erros_criticos: st.error(e)
         else:
             protocolo_id = f"NH-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
             
@@ -333,19 +330,26 @@ if finalidade != "Selecione uma opção...":
             </div>
             """, unsafe_allow_html=True)
             
-            # Link WhatsApp
+            # Link WhatsApp - Prevenindo erros de variáveis vazias (None)
+            safe_nome = nome_resp if nome_resp else "Não informado (Autofill)"
+            safe_ender = ender if ender else ""
+            safe_bairro = bairro if bairro else ""
+            safe_cidade = cidade if cidade else ""
+            safe_iptu = iptu if iptu else ""
+            
             msg_whatsapp = f"""*NOVO DIAGNÓSTICO - NICK HULL EMERSON*
 ---------------------------------------
 🆔 *Protocolo:* {protocolo_id}
-👤 *Cliente:* {nome_resp}
+👤 *Cliente:* {safe_nome}
 🏗️ *Serviço:* {finalidade}
+⏳ *Anos (Se Usucapião):* {anos if 'Usucapião' in finalidade else 'N/A'}
 
 📍 *Localização:*
-{ender}, {num} - {bairro}, {cidade}
+{safe_ender}, {num} - {safe_bairro}, {safe_cidade}
 CEP: {cep}
 
 📐 *Dados Técnicos:*
-IPTU: {iptu}
+IPTU: {safe_iptu}
 Área: {area} m²
 Proprietário: {proprietario}
 
