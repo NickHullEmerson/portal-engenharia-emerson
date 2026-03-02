@@ -4,7 +4,7 @@ import urllib.parse
 from datetime import datetime
 import random
 
-# --- CONFIGURAÇÃO DA PÁGINA (Layout Mobile-Friendly) ---
+# --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Nick Hull Emerson Engineering", page_icon="🏗️", layout="centered")
 
 # --- FUNÇÃO PARA TRATAMENTO DE IMAGEM ---
@@ -18,51 +18,67 @@ def get_base64_logo(file_path):
 
 bin_str = get_base64_logo("logo.png")
 
-# --- ESTILO CSS (CORRIGIDO PARA LEITURA E MOBILE) ---
+# --- ESTILO CSS (HEADER BLINDADO + MOBILE) ---
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; }
+    /* Força o fundo geral para evitar clarão excessivo, mas permite light mode nos inputs */
+    .stApp {
+        background-color: #f0f2f6; /* Fundo cinza bem claro para o corpo */
+    }
     
-    /* Cabeçalho Ajustado */
+    /* --- CABEÇALHO DARK (BLINDADO) --- */
     .header-container { 
-        text-align: center; 
-        padding-top: 10px; 
-        padding-bottom: 20px; 
+        background-color: #1a1c24; /* Fundo ESCURO fixo para destacar logo branco */
+        padding-top: 30px; 
+        padding-bottom: 30px; 
+        padding-left: 15px;
+        padding-right: 15px;
+        margin-top: -60px; /* Sobe para o topo da tela */
+        border-bottom: 4px solid #2e7bcf; /* Linha de Engenharia */
+        border-radius: 0 0 15px 15px; /* Arredondado embaixo (Estilo App) */
+        text-align: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        margin-bottom: 25px;
     }
     
     .header-text { 
-        font-size: 26px !important; 
+        font-family: 'Helvetica', sans-serif;
+        font-size: 24px !important; 
         font-weight: 700; 
-        color: #ffffff !important; 
+        color: #ffffff !important; /* Texto BRANCO forçado */
         margin-bottom: 5px;
         line-height: 1.2;
     }
     
     .subheader-text { 
-        font-size: 16px !important; 
-        color: #2e7bcf !important; 
+        font-size: 15px !important; 
+        color: #2e7bcf !important; /* Azul da marca */
         font-weight: 500; 
+        opacity: 0.9;
     }
     
-    /* Novo Design da Caixa de Boas-Vindas (Legível) */
+    /* --- CORPO DA PÁGINA --- */
+    
+    /* Caixa de Boas-vindas */
     .welcome-box { 
-        background-color: #262730; /* Cinza mais claro que o fundo */
-        color: #ffffff !important; /* Texto branco forçado */
+        background-color: #ffffff; 
+        color: #333333; 
         padding: 20px; 
         border-radius: 8px; 
-        border-left: 5px solid #2e7bcf; /* Detalhe azul lateral */
+        border-left: 5px solid #2e7bcf; 
         margin-bottom: 25px;
         font-size: 15px;
         line-height: 1.6;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
     
-    /* Protocolo */
+    /* Protocolo (Verde Sucesso) */
     .protocol-box { 
-        background-color: #1c2e2e; 
+        background-color: #e8f5e9; 
+        color: #1b5e20;
         padding: 15px; 
         border: 1px solid #25D366; 
-        border-radius: 5px; 
+        border-radius: 8px; 
         margin-top: 20px; 
         margin-bottom: 20px; 
         text-align: left; 
@@ -78,13 +94,15 @@ st.markdown("""
         height: 3.8em; 
         border: none; 
         font-size: 16px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     .stButton>button:hover { background-color: #3b8ee0; border: none; }
     
+    /* Listas de Documentos */
     .doc-list { 
         font-size: 14px; 
-        color: #e0e0e0; 
-        background: #1e1e1e; 
+        color: #444; 
+        background: #ffffff; 
         padding: 15px; 
         border-radius: 5px; 
         border: 1px dashed #2e7bcf; 
@@ -93,20 +111,18 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- CABEÇALHO (CORRIGIDO: LOGO + TEXTO SEMPRE VISÍVEIS) ---
+# --- CABEÇALHO (AGORA COM FUNDO ESCURO) ---
 st.markdown('<div class="header-container">', unsafe_allow_html=True)
 
-# 1. Logo (Se existir)
+# Logo (Branco sobre Fundo Escuro = Perfeito)
 if bin_str:
-    st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 140px; height: auto; display: block; margin: 0 auto 15px auto;">', unsafe_allow_html=True)
+    st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 150px; height: auto; display: block; margin: 0 auto 10px auto;">', unsafe_allow_html=True)
 
-# 2. Título (Sempre visível agora)
 st.markdown('<div class="header-text">🏗️ Nick Hull Emerson Engineering</div>', unsafe_allow_html=True)
-st.markdown('<div class="header-text" style="font-size: 20px !important;">Portal de Diagnóstico Estratégico</div>', unsafe_allow_html=True)
 st.markdown('<div class="subheader-text">Precisão e Estratégia | Low-Friction Systems</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- BOAS-VINDAS (NOVO DESIGN) ---
+# --- BOAS-VINDAS ---
 st.markdown(f"""
 <div class="welcome-box">
     <b>Bem-vindo(a)!</b><br><br>
@@ -156,10 +172,11 @@ if finalidade != "Selecione uma opção...":
 
     st.write("### 📍 Localização e Triagem Fiscal")
     
-    # Inputs sequenciais para mobile (evita colunas espremidas)
+    # Layout Mobile: Inputs full width para evitar quebra
     ender = st.text_input("Logradouro (Rua/Av) *")
     num = st.text_input("Nº *")
     
+    # CEP e Bairro lado a lado funciona bem em mobile
     col_cep, col_bairro = st.columns(2)
     with col_cep: cep = st.text_input("CEP *")
     with col_bairro: bairro = st.text_input("Bairro *")
@@ -251,7 +268,7 @@ if finalidade != "Selecione uma opção...":
             # --- ÁREA DE SUCESSO ---
             st.markdown(f"""
             <div class="protocol-box">
-                <h3 style="color:#25D366; margin:0;">✅ Diagnóstico Iniciado: {protocolo_id}</h3><br>
+                <h3 style="color:#1b5e20; margin:0;">✅ Diagnóstico Iniciado: {protocolo_id}</h3><br>
                 <b>Inventário:</b> {qtd_arquivos} arquivos registrados.<br><br>
                 <b>PASSO FINAL:</b> Clique abaixo e anexe as mídias no WhatsApp.<br>
                 🕒 <b>Prazo:</b> 24h a 48h úteis.
@@ -294,7 +311,7 @@ Proprietário: {proprietario}
             
             st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">Toque para abrir o WhatsApp</div>', unsafe_allow_html=True)
 
-# --- RODAPÉ MOBILE (SUPORTE) ---
+# --- RODAPÉ ---
 st.markdown("---")
 st.write("### 💬 Precisa de Ajuda?")
 link_sup = "https://wa.me/5511998511552?text=Olá Emerson, preciso de ajuda no Portal."
