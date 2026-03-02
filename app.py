@@ -100,7 +100,6 @@ if finalidade != "Selecione uma opção...":
         if k in finalidade: 
             st.info(f"**Importância:** {v}")
 
-    # Usucapião Específico
     if "Usucapião" in finalidade:
         anos = st.number_input("Há quantos anos você possui a posse do imóvel? *", min_value=0, step=1)
 
@@ -156,9 +155,9 @@ if finalidade != "Selecione uma opção...":
         </div><br>
         """, unsafe_allow_html=True)
 
-    # File Uploader como Validação de Prontidão (Sem API de Drive para evitar erro)
-    st.info("ℹ️ Utilize o botão abaixo para conferir se você já possui os arquivos no seu dispositivo. O envio real será feito pelo WhatsApp.")
-    files = st.file_uploader("Conferência de Arquivos (Opcional)", accept_multiple_files=True, type=['pdf','png','jpg','jpeg'])
+    # --- INVENTÁRIO DE ARQUIVOS ---
+    st.info("ℹ️ Selecione os arquivos abaixo para registro no protocolo. O envio real ocorrerá no WhatsApp.")
+    files = st.file_uploader("Pré-Seleção de Arquivos (Inventário)", accept_multiple_files=True, type=['pdf','png','jpg','jpeg'])
 
     # --- LGPD E TERMOS ---
     st.write("---")
@@ -192,20 +191,31 @@ if finalidade != "Selecione uma opção...":
             # Geração de ID Único
             protocolo_id = f"NH-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
             
+            # --- PROCESSAMENTO DO INVENTÁRIO DE ARQUIVOS (FORENSE) ---
+            qtd_arquivos = len(files) if files else 0
+            if qtd_arquivos > 0:
+                lista_arquivos = [f.name for f in files]
+                texto_arquivos = "\n".join([f"- {nome}" for nome in lista_arquivos])
+                msg_arquivos = f"{qtd_arquivos} arquivos pré-listados:\n{texto_arquivos}"
+            else:
+                msg_arquivos = "Nenhum arquivo listado na pré-conferência."
+
             # --- ÁREA DE SUCESSO E INSTRUÇÕES ---
             st.markdown(f"""
             <div class="protocol-box">
                 <h3 style="color:#25D366; margin:0;">✅ Diagnóstico Iniciado: {protocolo_id}</h3><br>
+                <b>Inventário de Entrega:</b><br>
+                Foram registrados {qtd_arquivos} documentos/fotos neste protocolo. <br>
+                <i>Certifique-se de anexá-los na conversa do WhatsApp.</i><br><br>
                 <b>Próximos Passos Obrigatórios:</b><br>
                 1. Clique no botão verde abaixo para abrir o WhatsApp.<br>
-                2. <b>ANEXE AS FOTOS E DOCUMENTOS</b> na conversa que irá abrir.<br>
+                2. <b>ANEXE AS FOTOS E DOCUMENTOS</b> listados.<br>
                 3. Nossa engenharia fará a triagem técnica.<br><br>
-                🕒 <b>SLA (Prazo de Resposta):</b> Orçamento/Parecer preliminar em 24h a 48h úteis após o recebimento das imagens.<br>
-                🛠️ <b>Metodologia:</b> Análise forense de viabilidade técnica e jurídica.
+                🕒 <b>SLA (Prazo de Resposta):</b> Orçamento/Parecer preliminar em 24h a 48h úteis após o recebimento das imagens.
             </div>
             """, unsafe_allow_html=True)
             
-            # --- CONSTRUÇÃO DO LINK WHATSAPP ---
+            # --- CONSTRUÇÃO DO LINK WHATSAPP COM INVENTÁRIO ---
             msg_whatsapp = f"""*NOVO DIAGNÓSTICO - NICK HULL EMERSON*
 ---------------------------------------
 🆔 *Protocolo:* {protocolo_id}
@@ -221,9 +231,12 @@ IPTU: {iptu}
 Área: {area} m²
 Proprietário: {proprietario}
 
+📂 *INVENTÁRIO DE DOCUMENTOS:*
+{msg_arquivos}
+
 🔐 *LGPD:* Aceite confirmado em {datetime.now().strftime('%d/%m/%Y')}
 
-⚠️ *PENDÊNCIA:* Estou anexando as fotos/documentos agora:
+⚠️ *AÇÃO:* Estou enviando os arquivos listados acima agora:
 """
             msg_encoded = urllib.parse.quote(msg_whatsapp)
             link_wa = f"https://wa.me/5511998511552?text={msg_encoded}"
@@ -231,12 +244,12 @@ Proprietário: {proprietario}
             st.markdown(f'''
                 <a href="{link_wa}" target="_blank" style="text-decoration:none;">
                     <button style="width:100%; background-color:#25D366; color:white; border:none; padding:15px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:18px;">
-                        📲 ENVIAR DADOS E ANEXAR FOTOS
+                        📲 CONFIRMAR ENVIO NO WHATSAPP
                     </button>
                 </a>
             ''', unsafe_allow_html=True)
             
-            st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">ℹ️ Ao clicar, o WhatsApp abrirá com os dados preenchidos. Basta anexar as mídias.</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align:center; font-size:12px; color:#888; margin-top:10px;">ℹ️ Ao clicar, os dados serão transferidos. Anexe as mídias para validar o protocolo.</div>', unsafe_allow_html=True)
 
 st.markdown("---")
 st.caption("© 2026 Nick Hull Emerson Engineering | Low-Friction Systems")
