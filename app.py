@@ -135,7 +135,7 @@ if finalidade != "Selecione uma opção...":
     if any(s in finalidade for s in servicos_documentais):
         req_text = ""
         if "Usucapião" in finalidade:
-            req_text = "• Matrícula ou Contrato<br>• Documento de Identidade<br>• Carnê IPTU<br>• Projeto existente (se houver)"
+            req_text = "• Matrícula ou Contrato<br>• Documento de Identidade<br>• Capa do IPTU<br>• Projeto existente (se houver)"
         elif "Retificação" in finalidade:
             req_text = "• Matrícula ou Transcrição<br>• Documento de Identidade<br>• Carnê IPTU<br>• Levantamento anterior"
         elif "CND" in finalidade:
