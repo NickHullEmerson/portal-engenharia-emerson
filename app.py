@@ -82,7 +82,7 @@ st.markdown("""
         
         /* AJUSTES SOLICITADOS */
   letter-spacing: -1px !important;  /* Letras mais juntas */
-    line-height: 4.0 !important;      /* VALOR CORRIGIDO: 1.0 aproxima as linhas */
+    line-height: 6.0 !important;      /* VALOR CORRIGIDO: 1.0 aproxima as linhas */
     margin-top: -90px !important;     /* PUXA PARA CIMA: Aumentei para -30px */
     margin-bottom: 5px !important;    /* Quase nenhum espaço para a linha de baixo */
     display: block !important;
