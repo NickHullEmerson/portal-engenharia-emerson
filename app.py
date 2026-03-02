@@ -3,37 +3,54 @@ import base64
 import urllib.parse
 from datetime import datetime
 import random
-import requests  # NECESSÁRIO PARA A API DE CEP
-import time
+import requests  # Para API de CEP e CNPJ
+import re        # Para validação de CPF/CNPJ
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Nick Hull Emerson Engineering", page_icon="🏗️", layout="centered")
 
-# --- INICIALIZAÇÃO DO ESTADO DA SESSÃO (MEMÓRIA TEMPORÁRIA) ---
-# Isso garante que quando a API preencher, os dados fiquem fixos na tela
+# --- INICIALIZAÇÃO DO ESTADO DA SESSÃO ---
 if 'logradouro' not in st.session_state: st.session_state.logradouro = ''
 if 'bairro' not in st.session_state: st.session_state.bairro = ''
 if 'cidade' not in st.session_state: st.session_state.cidade = ''
+if 'razao_social' not in st.session_state: st.session_state.razao_social = ''
 
-# --- FUNÇÃO DE BUSCA DE CEP (INTEGRAÇÃO VIACEP) ---
+# --- FUNÇÃO DE BUSCA DE CEP (VIACEP) ---
 def buscar_cep():
-    # Pega o valor digitado no CEP, remove traços e espaços
     cep_digitado = st.session_state.cep_input.replace("-", "").replace(".", "").strip()
-    
     if len(cep_digitado) == 8:
         try:
             response = requests.get(f"https://viacep.com.br/ws/{cep_digitado}/json/")
             dados = response.json()
-            
             if "erro" not in dados:
                 st.session_state.logradouro = dados['logradouro']
                 st.session_state.bairro = dados['bairro']
                 st.session_state.cidade = dados['localidade']
-                # Opcional: Adicionar UF se quiser: dados['uf']
             else:
-                st.toast("⚠️ CEP não encontrado na base de dados.", icon="❌")
+                st.toast("⚠️ CEP não encontrado.", icon="❌")
         except:
-            st.toast("⚠️ Erro de conexão ao buscar CEP.", icon="📡")
+            pass
+
+# --- FUNÇÃO DE BUSCA DE CNPJ (BRASILAPI) ---
+def buscar_cnpj():
+    cnpj_digitado = st.session_state.cnpj_input.replace("-", "").replace(".", "").replace("/", "").strip()
+    if len(cnpj_digitado) == 14:
+        try:
+            # Usando BrasilAPI que é pública e gratuita para dados de empresas
+            response = requests.get(f"https://brasilapi.com.br/api/cnpj/v1/{cnpj_digitado}")
+            if response.status_code == 200:
+                dados = response.json()
+                st.session_state.razao_social = dados['razao_social']
+                st.toast("✅ Empresa localizada!", icon="🏢")
+            else:
+                st.toast("⚠️ CNPJ não encontrado.", icon="❌")
+        except:
+            pass
+
+# --- VALIDAÇÃO SIMPLES DE CPF (MATEMÁTICA) ---
+def validar_cpf_formato(cpf):
+    cpf = re.sub(r'[^0-9]', '', cpf)
+    return len(cpf) == 11
 
 # --- FUNÇÃO PARA TRATAMENTO DE IMAGEM ---
 def get_base64_logo(file_path):
@@ -49,139 +66,51 @@ bin_str = get_base64_logo("logo.png")
 # --- ESTILO CSS ---
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; }
+ <style>
     .block-container {
-        padding-top: 1rem !important; 
-        margin-top: -10px !important;
+        /* Aumentei o padding para dar mais "cabeça" (espaço no topo) */
+        padding-top: 3rem !important; 
     }
-    
-   .header-text { 
-        font-size: clamp(24px, 5vw, 36px) !important; 
+
+    .header-text { 
+        font-size: clamp(22px, 5vw, 34px) !important; 
         font-weight: 700; 
         color: #2e7bcf !important; 
         width: 100%; 
         display: block; 
-        /* AJUSTES DE APROXIMAÇÃO ABAIXO */
-        line-height: 1.0 !important;    /* Reduz o espaço entre linhas internas */
-        margin-bottom: -10px !important; /* Puxa a linha de baixo para cima */
-        padding-bottom: 0px !important;
-    }
-    
-    .subheader-text { 
-        font-size: 16px !important; 
-        color: #888888 !important; 
-        margin-top: 5px; 
-        font-weight: 500; 
-    }
-    
-    .welcome-box { 
-        background-color: #f0f2f6; 
-        padding: 20px; 
-        border-radius: 10px; 
-        border-left: 5px solid #2e7bcf; 
-        text-align: justify; 
-        margin-bottom: 20px;
-        font-size: 14px;
-        color: #31333F !important; 
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .custom-info-box {
-        background-color: #e1f5fe; 
-        color: #0277bd !important; 
-        padding: 15px;
-        border-radius: 8px;
-        border-left: 5px solid #0288d1;
-        margin-bottom: 20px;
-        font-size: 14px;
-        line-height: 1.5;
-    }
-    
-    .services-hint {
-        background-color: #fff3cd;
-        color: #856404 !important;
-        padding: 12px;
-        border-radius: 8px;
-        border-left: 5px solid #ffc107;
-        margin-bottom: 10px;
-        font-size: 13px;
-        font-weight: 600;
-    }
-    
-    .scroll-hint {
         text-align: center;
-        color: #2e7bcf;
-        font-size: 12px;
-        margin: 15px 0;
-        animation: pulse 2s infinite;
+        
+        /* AJUSTES SOLICITADOS */
+  letter-spacing: -1px !important;  /* Letras mais juntas */
+    line-height: 4.0 !important;      /* VALOR CORRIGIDO: 1.0 aproxima as linhas */
+    margin-top: -90px !important;     /* PUXA PARA CIMA: Aumentei para -30px */
+    margin-bottom: 5px !important;    /* Quase nenhum espaço para a linha de baixo */
+    display: block !important;
+
+    /* Classe específica para a primeira linha se quiser ajustes diferentes */
+    .main-title {
+        margin-bottom: 0px !important;
     }
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
+
+    .subheader-text { 
+        font-size: clamp(14px, 4vw, 16px) !important; 
+        color: #888888 !important; 
+        text-align: center;
+        margin-top: 0px !important;
+        letter-spacing: -0.5px !important; /* Letras do subtítulo também mais juntas */
     }
-    
-    .lgpd-box {
-        background-color: #fff9e6;
-        border: 2px solid #ff9800;
-        padding: 15px;
-        border-radius: 8px;
-        margin: 15px 0;
-    }
-    .lgpd-box label {
-        color: #e65100 !important;
-        font-weight: 700 !important;
-        font-size: 15px !important;
-    }
-    .lgpd-box input[type="checkbox"] {
-        width: 24px !important;
-        height: 24px !important;
-        cursor: pointer !important;
-    }
-    
-    .doc-list { 
-        font-size: 13px; 
-        color: #31333F; 
-        background: #ffffff; 
-        padding: 15px; 
-        border-radius: 5px; 
-        border: 1px dashed #2e7bcf; 
-        line-height: 1.5; 
-    }
-    
-    .protocol-box { 
-        background-color: #e8f5e9; 
-        color: #1b5e20; 
-        padding: 15px; 
-        border: 1px solid #25D366; 
-        border-radius: 5px; 
-        margin-top: 20px; 
-        margin-bottom: 20px; 
-        text-align: left; 
-    }
-    
-    .stButton>button { 
-        width: 100%; 
-        border-radius: 8px; 
-        background-color: #2e7bcf; 
-        color: white !important; 
-        font-weight: bold; 
-        height: 4em; 
-        border: none; 
-    }
-    .stButton>button:hover { background-color: #3b8ee0; border: none; }
-    
-    .header-container { text-align: center; padding: 20px 0px; }
-    </style>
+</style>
     """, unsafe_allow_html=True)
 
 # --- CABEÇALHO ---
 st.markdown('<div class="header-container">', unsafe_allow_html=True)
 if bin_str:
-    st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">', unsafe_allow_html=True)
+    st.markdown(f'<img src="data:image/png;base64,{bin_str}" style="max-width: 150px; height: auto; display: block; margin: 0 auto; margin-bottom: 10px;">', unsafe_allow_html=True)
 else:
-    st.markdown('<p class="header-text">🏗️ Nick Hull Emerson Engineering</p>', unsafe_allow_html=True)
+    st.markdown('<p class="header-text main-title">🏗️ Nick Hull Emerson Engineering</p>', unsafe_allow_html=True)
 
-st.markdown('<br><p class="header-text">Portal de Diagnóstico Estratégico</p>', unsafe_allow_html=True)
+# Removido o <br> para eliminar o buraco entre as linhas
+st.markdown('<p class="header-text">Portal de Diagnóstico Estratégico</p>', unsafe_allow_html=True)
 st.markdown('<p class="subheader-text">Precisão e Estratégia | Low-Friction Systems</p>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -195,8 +124,28 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# --- FORMULÁRIO ---
-nome_resp = st.text_input("Nome Completo do Responsável *", key="n_resp", placeholder="Ex: João Silva Santos")
+# --- DADOS DO CLIENTE (COM INTEGRAÇÃO CNPJ) ---
+st.write("### 👤 Identificação do Responsável")
+
+tipo_pessoa = st.radio("Tipo de Pessoa:", ["Pessoa Física (CPF)", "Pessoa Jurídica (CNPJ)"], horizontal=True)
+
+nome_resp = ""
+doc_resp = ""
+
+if tipo_pessoa == "Pessoa Física (CPF)":
+    # CPF apenas valida formato, não puxa nome (LGPD)
+    doc_resp = st.text_input("CPF *", placeholder="000.000.000-00")
+    if doc_resp and not validar_cpf_formato(doc_resp):
+        st.caption("⚠️ O formato do CPF parece incompleto.")
+    nome_resp = st.text_input("Nome Completo do Responsável *", placeholder="Ex: João Silva Santos")
+
+else:
+    # CNPJ puxa o nome automaticamente via BrasilAPI
+    st.info("💡 Digite o CNPJ e aperte Enter para buscar o nome da empresa.")
+    doc_resp = st.text_input("CNPJ *", key="cnpj_input", on_change=buscar_cnpj, placeholder="00.000.000/0000-00")
+    # O valor vem do session_state se foi encontrado, ou permite digitação manual
+    nome_resp = st.text_input("Razão Social / Nome da Empresa *", value=st.session_state.razao_social, placeholder="Nome da Empresa Ltda")
+
 
 # --- DESTAQUE DOS SERVIÇOS ---
 st.markdown("""
@@ -255,24 +204,17 @@ if finalidade != "Selecione uma opção...":
     st.write("### 📍 Localização e Triagem Fiscal")
     st.info("💡 Digite o CEP e aperte Enter para preencher o endereço automaticamente.")
     
-    # --- SISTEMA DE CEP AUTOMATIZADO ---
     col_cep, col_num = st.columns([2, 1])
-    
     with col_cep:
-        # Quando o usuário digita o CEP e sai do campo (on_change), a função buscar_cep é chamada
         cep_input = st.text_input("CEP * (Somente números)", key="cep_input", on_change=buscar_cep, placeholder="00000000")
-    
     with col_num: 
         num = st.text_input("Nº *", placeholder="123")
 
-    # Os campos abaixo são preenchidos pelo session_state automaticamente
     ender = st.text_input("Logradouro *", value=st.session_state.logradouro, placeholder="Rua...")
     
     c1, c2 = st.columns(2)
-    with c1: 
-        bairro = st.text_input("Bairro *", value=st.session_state.bairro, placeholder="Bairro...")
-    with c2: 
-        cidade = st.text_input("Cidade *", value=st.session_state.cidade, placeholder="Cidade...")
+    with c1: bairro = st.text_input("Bairro *", value=st.session_state.bairro, placeholder="Bairro...")
+    with c2: cidade = st.text_input("Cidade *", value=st.session_state.cidade, placeholder="Cidade...")
 
     iptu = st.text_input("Número do IPTU (Contribuinte) *", placeholder="000.000.000-0")
     area = st.number_input("Área Aproximada (m²) *", min_value=0.0, step=10.0)
@@ -318,7 +260,6 @@ if finalidade != "Selecione uma opção...":
 
     st.write("---")
     
-    # --- CHECKBOX LGPD DESTACADA ---
     st.markdown('<div class="lgpd-box">', unsafe_allow_html=True)
     st.write("### 🔒 PASSO OBRIGATÓRIO: Autorização de Dados")
     st.warning("⚠️ Marque a caixa abaixo para prosseguir:")
@@ -326,16 +267,11 @@ if finalidade != "Selecione uma opção...":
     st.markdown('</div>', unsafe_allow_html=True)
 
     if st.button("GERAR PROTOCOLO E FINALIZAR"):
-        
-        # --- VALIDAÇÃO (BAIXO ATRITO) ---
         erros_criticos = []
-        
         if not lgpd_check:
             erros_criticos.append("⚠️ O aceite da LGPD é obrigatório para prosseguir.")
-            
         if finalidade == "Selecione uma opção...":
             erros_criticos.append("⚠️ Selecione a finalidade do trabalho.")
-            
         if "Usucapião" in finalidade and anos == 0:
             erros_criticos.append("⚠️ Informe o tempo de posse (anos) para Usucapião.")
 
@@ -361,18 +297,20 @@ if finalidade != "Selecione uma opção...":
             </div>
             """, unsafe_allow_html=True)
             
-            # Tratamento de variáveis vazias para não dar erro
-            safe_nome = nome_resp if nome_resp else "Não informado (Autofill)"
+            # Variáveis seguras
+            safe_nome = nome_resp if nome_resp else "Não informado"
+            safe_doc = doc_resp if doc_resp else "Não informado"
             safe_ender = ender if ender else ""
             safe_bairro = bairro if bairro else ""
             safe_cidade = cidade if cidade else ""
-            safe_cep = cep_input if cep_input else "" # Pega a variável do session
+            safe_cep = cep_input if cep_input else ""
             safe_iptu = iptu if iptu else ""
             
             msg_whatsapp = f"""*NOVO DIAGNÓSTICO - NICK HULL EMERSON*
 ---------------------------------------
 🆔 *Protocolo:* {protocolo_id}
 👤 *Cliente:* {safe_nome}
+📄 *Documento:* {safe_doc}
 🏗️ *Serviço:* {finalidade}
 ⏳ *Anos (Se Usucapião):* {anos if 'Usucapião' in finalidade else 'N/A'}
 
